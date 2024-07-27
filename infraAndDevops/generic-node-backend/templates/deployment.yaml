@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.deployment.name }}  # node-postgres-test
+  labels:
+    app: {{ .Values.deployment.labels.app }}  # Pass the whole obj
+spec:
+  replicas: {{ .Values.deployment.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.deployment.labels.app }}
+  template:  # Template organizes containers inside a pod and their config
+    metadata:
+      labels:
+        app: {{ .Values.deployment.labels.app }}
+    spec:
+      containers:
+        - name: {{ .Values.service.name }}-container
+          image: {{ .Values.deployment.container.image }}
+          ports:
+            - containerPort: {{ .Values.deployment.container.ports.containerPort }}
+          env:
+            {{- range .Values.deployment.container.env }}
+            - name: {{ .name }}
+              value: "{{ .value }}"
+            {{- end }}

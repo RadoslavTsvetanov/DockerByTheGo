@@ -1,0 +1,29 @@
+name: "node-postgres-test"
+application:
+  port: 3000
+service:
+  port: 80
+  protocol: TCP
+  type: LoadBalancer
+  name: "node-postgres-2"
+deployment:
+  labels:
+    app: node-postgres-test
+  name: "node-postgres-2"
+  replicas: 1
+
+  container: 
+    image: radoslav123/node-postgres-test:latest
+    ports:
+      containerPort: 3000
+    env:
+        - name: POSTGRES_USER
+          value: "postgres"
+        - name: POSTGRES_DB
+          value: "postgres"
+        - name: POSTGRES_PASSWORD
+          value: "kl4fr9fUDS"
+        - name: POSTGRES_HOST
+          value: "my-release-postgresql" 
+        - name: POSTGRES_PORT
+          value: "5432"

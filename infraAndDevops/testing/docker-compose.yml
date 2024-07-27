@@ -1,0 +1,17 @@
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTICSEARCH_VERSION}
+    environment:
+      - discovery.type=${DISCOVERY_TYPE}
+    ports:
+      - "${ELASTICSEARCH_PORT}:${ELASTICSEARCH_PORT}"
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:${ELASTICSEARCH_VERSION}
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:${ELASTICSEARCH_PORT}
+    ports:
+      - "${KIBANA_PORT}:${KIBANA_PORT}"
+    depends_on:
+      - elasticsearch

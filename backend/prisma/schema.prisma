@@ -1,0 +1,28 @@
+// schema.prisma
+
+// Define the datasource (adjust these settings based on your actual database)
+datasource db {
+  provider = "postgresql" // You can change this to mysql, sqlite, etc.
+  url      = env("DATABASE_URL")
+}
+
+// Define the generator for Prisma Client
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Define the User model
+model User {
+  id        Int       @id @default(autoincrement())
+  username  String    @unique
+  password  String
+  projects  Project[]
+}
+
+// Define the Project model
+model Project {
+  id        Int       @id @default(autoincrement())
+  name      String
+  userId    Int
+  user      User      @relation(fields: [userId], references: [id])
+}
