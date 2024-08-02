@@ -60,119 +60,7 @@ func createNamespace(namespace string) error {
 	return nil
 }
 
-func fetchAndPrintPods(namespace string) error {
-	clientset, err := getK8sClient()
-	if err != nil {
-		return err
-	}
-
-	pods, err := clientset.CoreV1().Pods(namespace).List(context.Background(), metav1.ListOptions{})
-	if err != nil {
-		return err
-	}
-	fmt.Printf("Pods in namespace %s:\n", namespace)
-	for _, pod := range pods.Items {
-		fmt.Printf("- Pod Name: %s\n  Namespace: %s\n  Node: %s\n  Status: %s\n",
-			pod.Name, pod.Namespace, pod.Spec.NodeName, pod.Status.Phase)
-	}
-
-	return nil
-}
-
-func fetchAndPrintServices(namespace string) error {
-	clientset, err := getK8sClient()
-	if err != nil {
-		return err
-	}
-
-	services, err := clientset.CoreV1().Services(namespace).List(context.Background(), metav1.ListOptions{})
-	if err != nil {
-		return err
-	}
-	fmt.Printf("\nServices in namespace %s:\n", namespace)
-	for _, svc := range services.Items {
-		fmt.Printf("- Service Name: %s\n  Type: %s\n  ClusterIP: %s\n  Ports: %v\n",
-			svc.Name, svc.Spec.Type, svc.Spec.ClusterIP, svc.Spec.Ports)
-	}
-
-	return nil
-}
-
-func fetchAndPrintDeployments(namespace string) error {
-	clientset, err := getK8sClient()
-	if err != nil {
-		return err
-	}
-
-	deployments, err := clientset.AppsV1().Deployments(namespace).List(context.Background(), metav1.ListOptions{})
-	if err != nil {
-		return err
-	}
-	fmt.Printf("\nDeployments in namespace %s:\n", namespace)
-	for _, deploy := range deployments.Items {
-		fmt.Printf("- Deployment Name: %s\n  Replicas: %d/%d\n  Selector: %v\n",
-			deploy.Name, deploy.Status.ReadyReplicas, *deploy.Spec.Replicas, deploy.Spec.Selector.MatchLabels)
-	}
-
-	return nil
-}
-
-func fetchAndPrintConfigMaps(namespace string) error {
-	clientset, err := getK8sClient()
-	if err != nil {
-		return err
-	}
-
-	configMaps, err := clientset.CoreV1().ConfigMaps(namespace).List(context.Background(), metav1.ListOptions{})
-	if err != nil {
-		return err
-	}
-	fmt.Printf("\nConfigMaps in namespace %s:\n", namespace)
-	for _, cm := range configMaps.Items {
-		fmt.Printf("- ConfigMap Name: %s\n  Data: %v\n", cm.Name, cm.Data)
-	}
-
-	return nil
-}
-
-func fetchAndPrintSecrets(namespace string) error {
-	clientset, err := getK8sClient()
-	if err != nil {
-		return err
-	}
-
-	secrets, err := clientset.CoreV1().Secrets(namespace).List(context.Background(), metav1.ListOptions{})
-	if err != nil {
-		return err
-	}
-	fmt.Printf("\nSecrets in namespace %s:\n", namespace)
-	for _, secret := range secrets.Items {
-		fmt.Printf("- Secret Name: %s\n  Type: %s\n", secret.Name, secret.Type)
-	}
-
-	return nil
-}
-
-func fetchAndPrintAllResources(namespace string) error {
-	if err := fetchAndPrintPods(namespace); err != nil {
-		return err
-	}
-	if err := fetchAndPrintServices(namespace); err != nil {
-		return err
-	}
-	if err := fetchAndPrintDeployments(namespace); err != nil {
-		return err
-	}
-	if err := fetchAndPrintConfigMaps(namespace); err != nil {
-		return err
-	}
-	if err := fetchAndPrintSecrets(namespace); err != nil {
-		return err
-	}
-	return nil
-}
-
-func createPod(namespace, name, image string, envVars map[string]string, containerPorts []v1.ContainerPort) error {
+func createPod(namespace, name, image string, envVars map[string]string, containerPorts []v1.ContainerPort, labels map[string]string) error {
 	clientset, err := getK8sClient()
 	if err != nil {
 		return err
@@ -189,7 +77,7 @@ func createPod(namespace, name, image string, envVars map[string]string, contain
 	pod := &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   name,
-			Labels: map[string]string{"app": name},
+			Labels: labels,
 		},
 		Spec: v1.PodSpec{
 			Containers: []v1.Container{
@@ -210,7 +98,7 @@ func createPod(namespace, name, image string, envVars map[string]string, contain
 	return nil
 }
 
-func createService(namespace, name string, port int32, serviceType v1.ServiceType) error {
+func createService(namespace, name string, port int32, serviceType v1.ServiceType, labels map[string]string) error {
 	clientset, err := getK8sClient()
 	if err != nil {
 		return err
@@ -218,15 +106,11 @@ func createService(namespace, name string, port int32, serviceType v1.ServiceTyp
 
 	service := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-			Labels: map[string]string{
-				"app": name,
-			},
+			Name:   name,
+			Labels: labels,
 		},
 		Spec: v1.ServiceSpec{
-			Selector: map[string]string{
-				"app": name,
-			},
+			Selector: labels,
 			Ports: []v1.ServicePort{
 				{
 					Port:       port,
@@ -244,21 +128,7 @@ func createService(namespace, name string, port int32, serviceType v1.ServiceTyp
 	return nil
 }
 
-func defaultHandleError(e error) {
-	if e != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", e)
-	}
-}
-
-func homeDir() string {
-	if h := os.Getenv("HOME"); h != "" {
-		return h
-	}
-	return os.Getenv("USERPROFILE") // Windows
-}
-
-// CreateDeployment creates a Kubernetes Deployment in the specified namespace
-func CreateDeployment(namespace, name, image string, replicas int32, env map[string]string) error {
+func CreateDeployment(namespace, name, image string, replicas int32, env map[string]string, labels map[string]string) error {
 	clientset, err := getK8sClient()
 	if err != nil {
 		return err
@@ -274,16 +144,17 @@ func CreateDeployment(namespace, name, image string, replicas int32, env map[str
 
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
+			Name:   name,
+			Labels: labels,
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: &replicas,
 			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"app": name},
+				MatchLabels: labels,
 			},
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"app": name},
+					Labels: labels,
 				},
 				Spec: v1.PodSpec{
 					Containers: []v1.Container{
@@ -315,7 +186,7 @@ func CreateDeployment(namespace, name, image string, replicas int32, env map[str
 
 type StringOrNil interface{}
 
-func CreateUnmanagedContainer(namespace string, name StringOrNil, env map[string]string) {
+func CreateUnmanagedContainer(namespace string, name StringOrNil, env map[string]string, labels map[string]string) {
 	switch v := name.(type) {
 	case string:
 		fmt.Printf("Creating pod %s in namespace %s.\n", v, namespace)
@@ -323,9 +194,9 @@ func CreateUnmanagedContainer(namespace string, name StringOrNil, env map[string
 			{
 				ContainerPort: 5432,
 			},
-		})
+		}, labels)
 
-		createService(namespace, v, 5432, v1.ServiceTypeNodePort)
+		createService(namespace, v, 5432, v1.ServiceTypeNodePort, labels)
 	case nil:
 		fmt.Printf("Creating default pod in namespace %s.\n", namespace)
 		autoGeneratedName := uuid.NewString()
@@ -333,36 +204,45 @@ func CreateUnmanagedContainer(namespace string, name StringOrNil, env map[string
 			{
 				ContainerPort: 5432,
 			},
-		})
+		}, labels)
 
-		createService(namespace, autoGeneratedName, 5432, v1.ServiceTypeNodePort)
+		createService(namespace, autoGeneratedName, 5432, v1.ServiceTypeNodePort, labels)
 	default:
 		fmt.Printf("Invalid name type: %T\n", v)
 	}
 }
 
-func createManagedContainer(namespace string, name StringOrNil, env map[string]string) {
+func createManagedContainer(namespace string, name StringOrNil, env map[string]string, labels map[string]string) {
 	switch v := name.(type) {
 	case string:
 		fmt.Printf("Creating deployment %s in namespace %s.\n", v, namespace)
-		CreateDeployment(namespace, v, "postgres", 1, env)
-		createService(namespace, v, 5432, v1.ServiceTypeNodePort)
+		CreateDeployment(namespace, v, "postgres", 1, env, labels)
+		createService(namespace, v, 5432, v1.ServiceTypeNodePort, labels)
 	case nil:
 		fmt.Printf("Creating default deployment in namespace %s.\n", namespace)
 		autoGeneratedName := uuid.NewString()
-		CreateDeployment(namespace, autoGeneratedName, "postgres", 1, env)
-		createService(namespace, autoGeneratedName, 5432, v1.ServiceTypeNodePort)
+		CreateDeployment(namespace, autoGeneratedName, "postgres", 1, env, labels)
+		createService(namespace, autoGeneratedName, 5432, v1.ServiceTypeNodePort, labels)
 	default:
 		fmt.Printf("Invalid name type: %T\n", v)
 	}
 }
 
+func defaultHandleError(e error) {
+	if e != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", e)
+	}
+}
+
+func homeDir() string {
+	if h := os.Getenv("HOME"); h != "" {
+		return h
+	}
+	return os.Getenv("USERPROFILE") // Windows
+}
+
 func main() {
-	namespace := "default"
-	// Uncomment the following line if you want to fetch and print all resources
-	// if err := fetchAndPrintAllResources(namespace); err != nil {
-	//  defaultHandleError(err)
-	// }
+	namespace := "rado"
 
 	envVars := map[string]string{
 		"POSTGRES_USER":     "postgres",
@@ -371,8 +251,11 @@ func main() {
 		"POSTGRES_HOST":     "my-release-postgresql",
 		"POSTGRES_PORT":     "5432",
 	}
+	labels := map[string]string{
+		"app": "example-app",
+		"env": "development",
+	}
 
-	CreateUnmanagedContainer(namespace, "kuku2", envVars)
-	// Example for creating a managed container
-	// createManagedContainer(namespace, nil, envVars)
+	createNamespace(namespace)
+	CreateUnmanagedContainer(namespace, "kuku2", envVars, labels)
 }

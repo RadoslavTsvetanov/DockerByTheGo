@@ -1,1 +1,4 @@
-kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/bundle.yaml --force-conflicts=true --server-side=true
+minikube create namespace monitroing
+kubectl apply -f secret.yml
+helm install -n prometheus prometheus-community/kube-prometheus-stack -f values.yaml
+echo "port forward the grafana service"
