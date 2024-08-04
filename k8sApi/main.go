@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -10,14 +11,94 @@ import (
 	"github.com/google/uuid"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
-	"sigs.k8s.io/yaml"
 )
 
 var clientset *kubernetes.Clientset
+var namesapce_based_role = "koko"
+
+func createNamespaceRestrictedUser(namespace, roleName string) error {
+	clientset, err := getK8sClient()
+	if err != nil {
+		return fmt.Errorf("failed to get Kubernetes client: %v", err)
+	}
+
+	ctx := context.TODO()
+
+	// Create ServiceAccount
+	sa := &v1.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      roleName,
+			Namespace: namespace,
+		},
+	}
+
+	_, err = clientset.CoreV1().ServiceAccounts(namespace).Create(ctx, sa, metav1.CreateOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to create service account: %v", err)
+	}
+
+	// Create Role
+	role := &rbacv1.Role{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      roleName,
+			Namespace: namespace,
+		},
+		Rules: []rbacv1.PolicyRule{
+			{
+				APIGroups: []string{""},
+				Resources: []string{"pods", "services", "configmaps", "secrets"},
+				Verbs:     []string{"get", "list", "watch", "create", "update", "delete"},
+			},
+			{
+				APIGroups: []string{"apps"},
+				Resources: []string{"deployments", "replicasets", "statefulsets"},
+				Verbs:     []string{"get", "list", "watch", "create", "update", "delete"},
+			},
+			{
+				APIGroups: []string{"batch"},
+				Resources: []string{"jobs", "cronjobs"},
+				Verbs:     []string{"get", "list", "watch", "create", "update", "delete"},
+			},
+		},
+	}
+
+	_, err = clientset.RbacV1().Roles(namespace).Create(ctx, role, metav1.CreateOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to create role: %v", err)
+	}
+
+	// Create RoleBinding
+	roleBinding := &rbacv1.RoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "namespace-restricted-rolebinding",
+			Namespace: namespace,
+		},
+		Subjects: []rbacv1.Subject{
+			{
+				Kind:      rbacv1.ServiceAccountKind,
+				Name:      "example-service-account",
+				Namespace: namespace,
+			},
+		},
+		RoleRef: rbacv1.RoleRef{
+			Kind:     "Role",
+			Name:     roleName,
+			APIGroup: "rbac.authorization.k8s.io",
+		},
+	}
+
+	_, err = clientset.RbacV1().RoleBindings(namespace).Create(ctx, roleBinding, metav1.CreateOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to create role binding: %v", err)
+	}
+
+	return nil
+}
 
 func getK8sClient() (*kubernetes.Clientset, error) {
 	if clientset != nil {
@@ -89,6 +170,7 @@ func createPod(namespace, name, image string, envVars map[string]string, contain
 					Ports: containerPorts,
 				},
 			},
+			ServiceAccountName: namesapce_based_role, // kinda lazy refactor later, gosh if this was ts i could create a class called user and attach all the redunadant args to the constructor
 		},
 	}
 	_, err = clientset.CoreV1().Pods(namespace).Create(context.Background(), pod, metav1.CreateOptions{})
@@ -247,25 +329,26 @@ func DeployBackend(namespace string, imageName string, envVars map[string]string
 }
 
 func main() {
-	namespace := "test-db"
+	namespace := "test-db-3"
 
-	envVars := map[string]string{
-		"POSTGRES_USER":     "postgres",
-		"POSTGRES_PASSWORD": "kl4fr9fUDS",
-		"POSTGRES_DB":       "postgres",
-		"POSTGRES_HOST":     "my-release-postgresql",
-		"POSTGRES_PORT":     "5432",
-	}
-	labels := map[string]string{
-		"app": "example-app",
-		"env": "development",
-	}
+	// envVars := map[string]string{
+	// 	"POSTGRES_USER":     "postgres",
+	// 	"POSTGRES_PASSWORD": "kl4fr9fUDS",
+	// 	"POSTGRES_DB":       "postgres",
+	// 	"POSTGRES_HOST":     "my-release-postgresql",
+	// 	"POSTGRES_PORT":     "5432",
+	// }
+	// labels := map[string]string{
+	// 	"app": "example-app",
+	// 	"env": "development",
+	// }
 
 	err := createNamespace(namespace)
 	defaultHandleError(err)
 
-	Postgre(namespace, "my-mysql-y", envVars, labels)
 	queryAllResources(namespace)
+	defaultHandleError(createNamespaceRestrictedUser(namespace, "normal-user"))
+
 }
 func queryAllResources(namespace string) {
 	clientset, err := getK8sClient()
@@ -284,12 +367,12 @@ func queryAllResources(namespace string) {
 	}
 	fmt.Printf("Pods:\n")
 	for _, pod := range pods.Items {
-		data, err := yaml.Marshal(pod)
+		data, err := json.Marshal(pod)
 		if err != nil {
 			fmt.Printf("Error marshalling pod: %v\n", err)
 			continue
 		}
-		fmt.Printf("---\n%s\n", string(data))
+		fmt.Printf("---\n%s\n", string((data)))
 	}
 
 	// List Services
@@ -300,7 +383,7 @@ func queryAllResources(namespace string) {
 	}
 	fmt.Printf("Services:\n")
 	for _, service := range services.Items {
-		data, err := yaml.Marshal(service)
+		data, err := json.Marshal(service)
 		if err != nil {
 			fmt.Printf("Error marshalling service: %v\n", err)
 			continue
@@ -316,7 +399,7 @@ func queryAllResources(namespace string) {
 	}
 	fmt.Printf("Deployments:\n")
 	for _, deployment := range deployments.Items {
-		data, err := yaml.Marshal(deployment)
+		data, err := json.Marshal(deployment)
 		if err != nil {
 			fmt.Printf("Error marshalling deployment: %v\n", err)
 			continue

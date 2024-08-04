@@ -1,0 +1,8 @@
+# service-account.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: my-service-account
+  namespace: testing-rbac-1
+secrets:
+  - name: test-secret
