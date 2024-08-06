@@ -1,0 +1,4 @@
+enum RESOURCES {
+    DB,
+
+}
