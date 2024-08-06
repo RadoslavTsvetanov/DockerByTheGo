@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -21,80 +22,166 @@ import (
 var clientset *kubernetes.Clientset
 var namesapce_based_role = "koko"
 
-func createNamespaceRestrictedUser(namespace, roleName string) error {
+func createNamespaceAdminUser(name, namespace string) error {
+	return createNamespaceProfile(name, namespace)
+}
+
+func createRole(roleName string, namespace string, permissions []rbacv1.PolicyRule) error {
 	clientset, err := getK8sClient()
-	if err != nil {
-		return fmt.Errorf("failed to get Kubernetes client: %v", err)
-	}
-
-	ctx := context.TODO()
-
-	// Create ServiceAccount
-	sa := &v1.ServiceAccount{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      roleName,
-			Namespace: namespace,
-		},
-	}
-
-	_, err = clientset.CoreV1().ServiceAccounts(namespace).Create(ctx, sa, metav1.CreateOptions{})
-	if err != nil {
-		return fmt.Errorf("failed to create service account: %v", err)
-	}
-
-	// Create Role
+	defaultHandleError(err)
 	role := &rbacv1.Role{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      roleName,
 			Namespace: namespace,
 		},
-		Rules: []rbacv1.PolicyRule{
-			{
-				APIGroups: []string{""},
-				Resources: []string{"pods", "services", "configmaps", "secrets"},
-				Verbs:     []string{"get", "list", "watch", "create", "update", "delete"},
-			},
-			{
-				APIGroups: []string{"apps"},
-				Resources: []string{"deployments", "replicasets", "statefulsets"},
-				Verbs:     []string{"get", "list", "watch", "create", "update", "delete"},
-			},
-			{
-				APIGroups: []string{"batch"},
-				Resources: []string{"jobs", "cronjobs"},
-				Verbs:     []string{"get", "list", "watch", "create", "update", "delete"},
-			},
-		},
-	}
+		Rules: permissions,
+		// Create the ServiceAccount
 
-	_, err = clientset.RbacV1().Roles(namespace).Create(ctx, role, metav1.CreateOptions{})
+	}
+	_, err = clientset.RbacV1().Roles(namespace).Create(context.Background(), role, metav1.CreateOptions{})
+
 	if err != nil {
-		return fmt.Errorf("failed to create role: %v", err)
+		return fmt.Errorf("failed to create role binding: %v", err)
 	}
 
-	// Create RoleBinding
+	return nil
+}
+
+func createServiceAccount(name, roleName, namespace string) error {
 	roleBinding := &rbacv1.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "namespace-restricted-rolebinding",
+			Name:      roleName,
 			Namespace: namespace,
 		},
 		Subjects: []rbacv1.Subject{
 			{
-				Kind:      rbacv1.ServiceAccountKind,
-				Name:      "example-service-account",
+				Kind:      "ServiceAccount",
+				Name:      roleName,
 				Namespace: namespace,
 			},
 		},
 		RoleRef: rbacv1.RoleRef{
 			Kind:     "Role",
-			Name:     roleName,
+			Name:     "my-role",
 			APIGroup: "rbac.authorization.k8s.io",
 		},
 	}
 
-	_, err = clientset.RbacV1().RoleBindings(namespace).Create(ctx, roleBinding, metav1.CreateOptions{})
+	_, err := clientset.RbacV1().RoleBindings(namespace).Create(context.Background(), roleBinding, metav1.CreateOptions{})
+	secret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			Annotations: map[string]string{
+				"kubernetes.io/service-account.name": name,
+			},
+		},
+		Type: "kubernetes.io/service-account-token",
+	}
+
+	_, err = clientset.CoreV1().Secrets(namespace).Create(context.Background(), secret, metav1.CreateOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to create secret: %v", err)
+	}
+
+	clientset, err1 := getK8sClient()
+	defaultHandleError(err1)
+	sa := &v1.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Secrets: []v1.ObjectReference{
+			{
+				Name: "test-secret",
+			},
+		},
+	}
+	_, err = clientset.CoreV1().ServiceAccounts(namespace).Create(context.Background(), sa, metav1.CreateOptions{})
+
+	return err
+}
+func createNamespaceProfile(name, namespace string) error {
+	clientset, err1 := getK8sClient()
+	defaultHandleError(err1)
+	sa := &v1.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Secrets: []v1.ObjectReference{
+			{
+				Name: "test-secret",
+			},
+		},
+	}
+	_, err := clientset.CoreV1().ServiceAccounts(namespace).Create(context.Background(), sa, metav1.CreateOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to create service account: %v", err)
+	}
+
+	// Create the Role
+	role := &rbacv1.Role{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "my-role",
+			Namespace: namespace,
+		},
+		Rules: []rbacv1.PolicyRule{
+			{
+				APIGroups: []string{"", "extensions", "apps"},
+				Resources: []string{"*"},
+				Verbs:     []string{"*"},
+			},
+			{
+				APIGroups: []string{"batch"},
+				Resources: []string{"jobs", "cronjobs"},
+				Verbs:     []string{"*"},
+			},
+		},
+	}
+	_, err = clientset.RbacV1().Roles(namespace).Create(context.Background(), role, metav1.CreateOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to create role: %v", err)
+	}
+
+	// Create the RoleBinding
+	roleBinding := &rbacv1.RoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "my-rolebinding",
+			Namespace: namespace,
+		},
+		Subjects: []rbacv1.Subject{
+			{
+				Kind:      "ServiceAccount",
+				Name:      name,
+				Namespace: namespace,
+			},
+		},
+		RoleRef: rbacv1.RoleRef{
+			Kind:     "Role",
+			Name:     "my-role",
+			APIGroup: "rbac.authorization.k8s.io",
+		},
+	}
+	_, err = clientset.RbacV1().RoleBindings(namespace).Create(context.Background(), roleBinding, metav1.CreateOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to create role binding: %v", err)
+	}
+
+	// Create the Secret
+	secret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "my-service-account-token",
+			Namespace: namespace,
+			Annotations: map[string]string{
+				"kubernetes.io/service-account.name": name,
+			},
+		},
+		Type: "kubernetes.io/service-account-token",
+	}
+	_, err = clientset.CoreV1().Secrets(namespace).Create(context.Background(), secret, metav1.CreateOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to create secret: %v", err)
 	}
 
 	return nil
@@ -311,6 +398,29 @@ func createManagedContainer(namespace string, name StringOrNil, env map[string]s
 	}
 }
 
+func getUserToken(namespace, secretName string) (string, error) {
+
+	clientset, err := getK8sClient()
+	secret, err := clientset.CoreV1().Secrets(namespace).Get(context.Background(), secretName, metav1.GetOptions{})
+
+	if err != nil {
+		return "", fmt.Errorf("failed to get secret: %v", err)
+	}
+
+	tokenData, ok := secret.Data["token"]
+	if !ok {
+		return "", fmt.Errorf("token not found in secret %s", secretName)
+	}
+
+	token := base64.StdEncoding.EncodeToString(tokenData)
+	decodedToken, err := base64.StdEncoding.DecodeString(token)
+
+	if err != nil {
+		return "", fmt.Errorf("failed to decode token: %v", err)
+	}
+
+	return string(decodedToken), nil
+}
 func defaultHandleError(e error) {
 	if e != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", e)
@@ -329,7 +439,7 @@ func DeployBackend(namespace string, imageName string, envVars map[string]string
 }
 
 func main() {
-	namespace := "test-db-3"
+	namespace := "testing-rbac-custom-roles"
 
 	// envVars := map[string]string{
 	// 	"POSTGRES_USER":     "postgres",
@@ -343,12 +453,31 @@ func main() {
 	// 	"env": "development",
 	// }
 
-	err := createNamespace(namespace)
+	// err := createNamespace(namespace)
+	// defaultHandleError(err)
+
+	// queryAllResources(namespace)
+	// defaultHandleError(createNamespaceRestrictedUser(namespace, "normal-user"))
+	createNamespace(namespace)
+	e := createRole("admin", namespace, []rbacv1.PolicyRule{
+		{
+			APIGroups: []string{"", "extensions", "apps"},
+			Resources: []string{"*"},
+			Verbs:     []string{"*"},
+		},
+		{
+			APIGroups: []string{"batch"},
+			Resources: []string{"jobs", "cronjobs"},
+			Verbs:     []string{"*"},
+		},
+	})
+
+	defaultHandleError(e)
+	e = createServiceAccount("pesho", "admin", namespace)
+
+	token, err := getUserToken(namespace, "pesho")
+	fmt.Println(token)
 	defaultHandleError(err)
-
-	queryAllResources(namespace)
-	defaultHandleError(createNamespaceRestrictedUser(namespace, "normal-user"))
-
 }
 func queryAllResources(namespace string) {
 	clientset, err := getK8sClient()
@@ -359,7 +488,6 @@ func queryAllResources(namespace string) {
 
 	fmt.Printf("Resources in namespace %s:\n", namespace)
 
-	// List Pods
 	pods, err := clientset.CoreV1().Pods(namespace).List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		fmt.Printf("Error listing pods: %v\n", err)
