@@ -1,13 +1,7 @@
 package main
 
-import (
-	"fmt"
-
-	rbacv1 "k8s.io/api/rbac/v1"
-)
-
 func main() {
-	namespace := "testing-rbac-custom-roles"
+	// namespace := "testing-rbac-custom-roles"
 
 	// envVars := map[string]string{
 	// 	"POSTGRES_USER":     "postgres",
@@ -26,24 +20,28 @@ func main() {
 
 	// queryAllResources(namespace)
 	// defaultHandleError(createNamespaceRestrictedUser(namespace, "normal-user"))
-	createNamespace(namespace)
-	e := createRole("admin", namespace, []rbacv1.PolicyRule{
-		{
-			APIGroups: []string{"", "extensions", "apps"},
-			Resources: []string{"*"},
-			Verbs:     []string{"*"},
-		},
-		{
-			APIGroups: []string{"batch"},
-			Resources: []string{"jobs", "cronjobs"},
-			Verbs:     []string{"*"},
-		},
-	})
+	// createNamespace(namespace)
+	// e := createRole("admin", namespace, []rbacv1.PolicyRule{
+	// 	{
+	// 		APIGroups: []string{"", "extensions", "apps"},
+	// 		Resources: []string{"*"},
+	// 		Verbs:     []string{"*"},
+	// 	},
+	// 	{
+	// 		APIGroups: []string{"batch"},
+	// 		Resources: []string{"jobs", "cronjobs"},
+	// 		Verbs:     []string{"*"},
+	// 	},
+	// })
 
-	defaultHandleError(e)
-	e = createServiceAccount("pesho", "admin", namespace)
+	// defaultHandleError(e)
+	// e = createServiceAccount("pesho", "admin", namespace)
 
-	token, err := getUserToken(namespace, "pesho")
-	fmt.Println(token)
-	defaultHandleError(err)
+	// token, err := getUserToken(namespace, "pesho")
+	// fmt.Println(token)
+	// defaultHandleError(err)
+
+	// fmt.Println(createProject("huihuiov", "huiyo"))
+
+	wwwww()
 }
