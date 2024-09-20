@@ -1,28 +1,44 @@
-// schema.prisma
-
-// Define the datasource (adjust these settings based on your actual database)
 datasource db {
   provider = "postgresql" // You can change this to mysql, sqlite, etc.
   url      = env("DATABASE_URL")
 }
 
-// Define the generator for Prisma Client
 generator client {
   provider = "prisma-client-js"
 }
 
-// Define the User model
 model User {
   id        Int       @id @default(autoincrement())
   username  String    @unique
   password  String
-  projects  Project[]
+  projects  String[] @default([]) 
 }
 
-// Define the Project model
+
+model Permission {
+  id        Int       @id @default(autoincrement())
+  type      String
+  roleId    Int
+  description String
+  Role Role[]
+}
+
+model Role {
+  id        Int       @id @default(autoincrement())
+  name      String
+  permissions Permission[] // e.g. each user can have more than one permission, for example read, write, invite, admin, admin-like
+}
+
 model Project {
   id        Int       @id @default(autoincrement())
   name      String
   userId    Int
-  user      User      @relation(fields: [userId], references: [id])
+  usersWithPermissions Json // refactor the schema , or normailze it since this is a bit messy
+}
+
+model Template {
+  id        Int       @id @default(autoincrement())
+  name      String
+  content   Json
+  projectId Int
 }

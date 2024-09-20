@@ -28,6 +28,7 @@ var adminPolicyRule = []rbacv1.PolicyRule{
 		Verbs:     []string{"*"}, // All verbs (create, delete, update, etc.)
 	},
 }
+
 var clientset *kubernetes.Clientset
 var namesapce_based_role = "koko"
 
