@@ -160,15 +160,14 @@ export const dbRepo = {
   },
 
   template: {
-    async create(params: { name: string; content: object; projectId: number }) {
-      const { name, content, projectId } = params;
+    async create(params: { name: string; content: object}) {
       return await prisma.template.create({
-        data: { name, content, projectId },
+        data: params,
       });
     },
 
-    async getById(params: { id: number }) {
-      return await prisma.template.findUnique({ where: { id: params.id } });
+    async getByName(params: { name: string }) {
+      return await prisma.template.findFirstOrThrow({ where: params}); // yay this could throw error but no indication from ts side :(
     },
 
     async getAll() {

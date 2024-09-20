@@ -40,5 +40,4 @@ model Template {
   id        Int       @id @default(autoincrement())
   name      String
   content   Json
-  projectId Int
 }
