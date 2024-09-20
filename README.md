@@ -104,3 +104,6 @@
 
 - Integrate with a certificate authority (e.g., Let's Encrypt) to automatically generate and renew TLS/SSL certificates.
 - Provide users with the option to enable HTTPS for their services effortlessly.
+
+- infra as diagram and code: the project has a `/infra` which exposes a diagram from which you can make quick edits to services in  the form of a diagram
+- rawdog friendly, you just want the k8s cluster set up with all the additional helpers? - sure you  can configure your kubectl and rawdog it 
