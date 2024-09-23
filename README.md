@@ -94,16 +94,42 @@
 
 ```
 
-
+# Built in tools:
+When setting up the cluster for your happy k8s existence we set up some things for you. Some of the tools and operators are:
+- operator which manages your resources consumption so that you dont go over the limit of your tier 
 - **Built-in Monitoring and Alerts**: with managed services if a service goes down it automatically goes up again but it also sets up an alert to a `source`. Sources can be custom but also there are built in ones with email and discord using bot 
-
-- **Detailed Metrics**: Offer detailed metrics and monitoring tools to track the performance and health of containers and projects.
+- service mesh
+- **Detailed Metrics**: Offer detailed metrics and monitoring tools to track the performance and health of containers and projects. The metrics are exposed on a port and also the pod which is responsible for that does not go in the resource quota so dont bother removing it
 - **Alerting**: Allow users to set up alerts for issues such as crashes or performance degradation, possibly integrating with third-party services like Slack or email. ( make it into an event driven system where alongisde the container you deploy a listener which listens for certain things like restarting etc ... or make it useing logs collector)
 
-**Automatic TLS/SSL Management**:
+# Automatic TLS/SSL Management:
 
 - Integrate with a certificate authority (e.g., Let's Encrypt) to automatically generate and renew TLS/SSL certificates.
 - Provide users with the option to enable HTTPS for their services effortlessly.
 
 - infra as diagram and code: the project has a `/infra` which exposes a diagram from which you can make quick edits to services in  the form of a diagram
 - rawdog friendly, you just want the k8s cluster set up with all the additional helpers? - sure you  can configure your kubectl and rawdog it 
+
+
+
+
+
+
+
+# Resource consumption throttling
+Our goal is to simplify the usage of the cloud while at the same tyme not setting up traps like the big clouds so there are two policies we implment for resource consumption
+
+
+- strict: if your project happens to exceed the quotas you have your container that takes the most will be killed (note you can set up importance levels to containers so that the least important containers are killed first) and it repeats this until its back within range. You will be notofied for each killing of course and the  reason will be code 707 (see our custom status codes for more info) 
+
+- soft: if your project happens to exceed the limit you start paying as you go according to a standard quota ( or upgrade to the next plan i will decide ), you will ofc recieve an alert but no service will be killed, unless you upgrade your plan when you go backto the quota you will again be charged according to the plan you are on 
+
+
+
+
+
+
+
+# Custom status codes
+We believe in giving info whenever we do something which you did not request explicitely ( for example killing a service since it exceeded the quota) so we use status codes in our messages, here you can find info abiut them:
+- 707: quota exceeded, this indicates that the reason for the performed action is that the service has exceeded the memeory qoutas, scenarios where you will encounter this are but not all -> killing, increase quota for the resource
