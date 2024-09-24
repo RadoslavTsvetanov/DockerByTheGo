@@ -1,6 +1,7 @@
 package main
 
 func main() {
+
 	// namespace := "testing-rbac-custom-roles"
 
 	// envVars := map[string]string{
@@ -46,4 +47,9 @@ func main() {
 	wwwww()
 
 	// fffff()
+
+	// gettingAllEndpointsInAProjectForInProjectAccess()
+
+	// gettingEndpointsInAProjectForOutsideProjectAccess()
+
 }

@@ -1,9 +1,11 @@
 package main
 
+import "fmt"
+
 // Note by project i mean a namespace
 
 // this deploys a node js backend and a postgre db and wires them inside a certain project
-const namespace = "ooo"
+const namespace = "ollo"
 
 func wwwww() {
 
@@ -23,7 +25,19 @@ func wwwww() {
 	}
 
 	labels := map[string]string{ // note dont giove the same kabels to different services since there will be issues
-		"hui": "",
+		"hui": "gii",
+	}
+
+	appLabels := map[string]string{
+		"app": "mainApp",
+	}
+
+	appEnv := map[string]string{
+		"PG_HOST":     "primary-db-v-2",
+		"PG_PORT":     "5432",
+		"PG_USER":     "postgres",
+		"PG_PASSWORD": "kl4fr9fUDS",
+		"PG_DATABASE": "postgres",
 	}
 
 	createNamespace(namespace)
@@ -31,6 +45,7 @@ func wwwww() {
 	// createManagedContainer(namespace, "nodenackend", postgreEnv, labels, "radoslav123/node-postgres-test", 3000)
 	Postgre(namespace, "primary-db-v-2", postgreEnv, labels)
 	// Mysql(namespace, "primary-db-mysql", mysqlenvVars, labels)
+	createManagedContainer(namespace, "main-app-to-connect-to-db", appEnv, appLabels, "radoslav123/temp-temp:latest", 3000)
 
 }
 
@@ -41,5 +56,31 @@ func fffff() {
 
 // This deletes a certain service inside a project (it deletes the service, the deployment and the mesh node)
 func gggg() {
+
+}
+
+func gettingAllEndpointsInAProjectForInProjectAccess() {
+
+	serviceEndpoints, err := getServicesFromInsideTheCluster(namespace, namespace)
+	defaultHandleError(err)
+
+	for _, endpoint := range serviceEndpoints {
+
+		fmt.Println(endpoint)
+
+	}
+
+}
+
+func gettingEndpointsInAProjectForOutsideProjectAccess() {
+
+	serviceEndpoints, err := getServicesFromOutsideTheCluster(namespace)
+	defaultHandleError(err)
+
+	for _, endpoints := range serviceEndpoints {
+
+		fmt.Println(endpoints)
+
+	}
 
 }
