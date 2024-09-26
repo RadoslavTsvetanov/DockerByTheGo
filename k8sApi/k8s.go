@@ -11,6 +11,8 @@ import (
 	"regexp"
 	"strings"
 
+	corev1 "k8s.io/api/core/v1"
+
 	"github.com/google/uuid"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -232,6 +234,109 @@ func getK8sClient() (*kubernetes.Clientset, error) {
 
 	clientset, err = kubernetes.NewForConfig(config)
 	return clientset, err
+}
+
+func getNodePort() (int32, error) {
+
+	clientset, err := getK8sClient()
+
+	services, err := clientset.CoreV1().Services(corev1.NamespaceAll).List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return 0, fmt.Errorf("failed to list services: %v", err)
+	}
+
+	usedPorts := make(map[int32]struct{})
+	for _, svc := range services.Items {
+		for _, port := range svc.Spec.Ports {
+			if port.NodePort != 0 {
+				usedPorts[port.NodePort] = struct{}{}
+			}
+		}
+	}
+
+	// Iterate through the NodePort range and find an available port
+	for port := int32(30000); port <= 32767; port++ {
+		if _, exists := usedPorts[port]; !exists {
+			return port, nil
+		}
+	}
+	return 0, err
+}
+
+func exposeContainer(containerName string, projectName string) error {
+	clientset, err := getK8sClient()
+	if err != nil {
+		return fmt.Errorf("failed to get Kubernetes client: %v", err)
+	}
+
+	// Get the service associated with the container
+	service, err := clientset.CoreV1().Services(projectName).Get(context.TODO(), containerName, metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to get service: %v", err)
+	}
+
+	// Check if the service is already of type NodePort
+	if service.Spec.Type == corev1.ServiceTypeNodePort {
+		fmt.Println("The specified service is already of type NodePort.")
+		return nil
+	}
+
+	// Find an available NodePort
+	nodePort, err := getNodePort()
+	if err != nil {
+		return err
+	}
+
+	// Fetch the old port from the existing service
+	if len(service.Spec.Ports) == 0 {
+		return fmt.Errorf("service has no ports defined")
+	}
+	oldPort := service.Spec.Ports[0].Port
+
+	// Update the service to add NodePort
+	service.Spec.Type = corev1.ServiceTypeNodePort
+
+	// Update the service ports
+	service.Spec.Ports[0] = corev1.ServicePort{
+		Port:       oldPort,                      // Keep the existing port
+		TargetPort: intstr.FromInt(int(oldPort)), // Update target port
+		NodePort:   nodePort,                     // Assign the new NodePort
+	}
+
+	// Update the service in Kubernetes
+	_, err = clientset.CoreV1().Services(projectName).Update(context.TODO(), service, metav1.UpdateOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to update service: %v", err)
+	}
+
+	fmt.Printf("NodePort %d added successfully to service %s.\n", nodePort, containerName)
+
+	return nil
+}
+
+func unxeposeContainer(containerName string, namespace string) error {
+	clientset, err := getK8sClient()
+	fmt.Print("lool")
+	service, err := clientset.CoreV1().Services(namespace).Get(context.TODO(), containerName, metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to get service: %v", err)
+	}
+
+	if service.Spec.Type == corev1.ServiceTypeNodePort {
+
+		// Remove NodePort by changing the service type to ClusterIP or another type
+		service.Spec.Type = corev1.ServiceTypeClusterIP
+		// Update the servic``
+		_, err = clientset.CoreV1().Services(namespace).Update(context.TODO(), service, metav1.UpdateOptions{})
+		if err != nil {
+			return fmt.Errorf("failed to update service: %v", err)
+		}
+		fmt.Println("NodePort removed successfully.")
+	} else {
+		fmt.Println("The specified service is not of type NodePort.")
+	}
+
+	return nil
 }
 
 func createNamespace(namespace string) error {

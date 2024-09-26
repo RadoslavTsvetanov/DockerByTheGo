@@ -44,12 +44,11 @@ func main() {
 
 	// fmt.Println(createProject("huihuiov", "huiyo"))
 
-	wwwww()
+	// wwwww()
 
 	// fffff()
 
-	// gettingAllEndpointsInAProjectForInProjectAccess()
+	exposeService()
 
-	// gettingEndpointsInAProjectForOutsideProjectAccess()
-
+	gettingEndpointsInAProjectForOutsideProjectAccess()
 }

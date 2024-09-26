@@ -54,6 +54,16 @@ func fffff() {
 	deleteProject(namespace)
 }
 
+func unexposeService() {
+	fmt.Println("koew")
+	defaultHandleError(unxeposeContainer("primary-db-v-2", "ollo"))
+
+}
+
+func exposeService() {
+	defaultHandleError(exposeContainer("primary-db-v-2", "ollo"))
+}
+
 // This deletes a certain service inside a project (it deletes the service, the deployment and the mesh node)
 func gggg() {
 
