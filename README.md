@@ -1,3 +1,4 @@
+# Overview of the project
 - platform where you can easily deploy your docker containers
 - to deploy a docker container you create a `project` 
 - in a project you can create container and choose from a variety of container `options`
@@ -94,7 +95,7 @@
 
 ```
 
-# Built in tools:
+## Built in tools:
 
 When setting up the cluster for your happy k8s existence we set up some things for you. Some of the tools and operators are:
 
@@ -108,12 +109,12 @@ When setting up the cluster for your happy k8s existence we set up some things f
 
 - **Alerting**: Allow users to set up alerts for issues such as crashes or performance degradation, possibly integrating with third-party services like Slack or email. ( make it into an event driven system where alongisde the container you deploy a listener which listens for certain things like restarting etc ... or make it useing logs collector). By default there are three alert streams: slack, discord bot and email, but users can define custom alert handlers in the following langs: [js, python and bash]. Each project has an alerts tab where you can see all your custom handlers and the url for your alerts. why a url? - well to be able to send alerts and handle them using different handlers there is an alert collector in which every alert is stored, from there there are consumers for each alert according to the channel id. by using this approach we ensure that alerts are being handled in the orrder they are submitted (not that we dont take in mind the time overhead introduced by your custom handlers). Note custom handlers are excuted inside ephemeral pods to prevent maliicious activity so there are some limitations opposed on you as a handler write, look at custom handler enviremonts for more info
 
-# Custom Handler Enviroments:
+## Custom Handler Enviroments:
 Each channel jobs run inside a pod so no channel has access to the reources of other channel, this way we allow you to have modify the enviroment while protecting you from others channels
 each time a handler is updated the pod is cleaned up
 these pods have resource limitations which unless you have something very complex you probably wont exceed them but if exceeded you need to pay extra for bigger ceilling 
 
-# Automatic TLS/SSL Management:
+## Automatic TLS/SSL Management:
 
 - Integrate with a certificate authority (e.g., Let's Encrypt) to automatically generate and renew TLS/SSL certificates.
 
@@ -129,7 +130,7 @@ these pods have resource limitations which unless you have something very comple
 
 
 
-# Resource consumption throttling
+## Resource consumption throttling
 Our goal is to simplify the usage of the cloud while at the same tyme not setting up traps like the big clouds so there are two policies we implment for resource consumption
 
 
@@ -143,9 +144,39 @@ Our goal is to simplify the usage of the cloud while at the same tyme not settin
 
 
 
-# Custom status codes
+## Custom status codes
 We believe in giving info whenever we do something which you did not request explicitely ( for example killing a service since it exceeded the quota) so we use status codes in our messages, here you can find info abiut them:
 - 707: quota exceeded, this indicates that the reason for the performed action is that the service has exceeded the memeory qoutas, scenarios where you will encounter this are but not all -> killing, increase quota for the resource
 
 
 
+
+
+
+
+
+
+
+# Design choices
+
+## Why kafka instead of rabbitmq for alert collector:
+- it provides two ways to scale of needed making it more flexible
+- it allows two or more consumers two use a queue independently of each other
+- rabbitmq is a "simple" queue abstracted with a web interface
+-  kafka combines a publish subsribe and queue model and i needed the functionality for different services to consume the same topic while both needing the topics seperate e.g. consuming a record with one service shouldnrt remove it for the other so like that i can quickly scale up and down the services seperately
+  ```
+    Website Activity Tracking
+    The original use case for Kafka was to be able to rebuild a user activity tracking pipeline as a set of real-time publish-subscribe feeds. This means site activity (page views, searches, or other actions users may take) is published to central topics with one topic per activity type. These feeds are available for subscription for a range of use cases including real-time processing, real-time monitoring, and loading into Hadoop or offline data warehousing systems for offline processing and reporting.
+
+    Activity tracking is often very high volume as many activity messages are generated for each user page view. 
+  ```
+there could be huge amoubnts of alerts which need to be scaled programatically in case of an alert outbreak and i need different consumers to consume the same queue independently
+
+
+
+## Why golang for the k8sApi heler
+- go-client is the defacto package with the most adoption and support
+- i was looking for new language after ts fatigue
+
+## Some diagrams to visualize better the architecture
+- the alert system: `https://excalidraw.com/#json=TMBT6N24qs6WeQIVBWR2f,iMq1KeAnZfNalI6IxXL3og`
