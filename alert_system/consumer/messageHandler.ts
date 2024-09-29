@@ -22,7 +22,7 @@ function getChannelIdHandler(channelId: number): (msg: string) => statusCodes {
 
 export const handleMessage = (message: alertMessage) => {
   let numberOfRetries = 0;
-
+    console.log("msg", message)
   while (true) {
     if (
       getChannelIdHandler(message.handlerId)(message.content) ==

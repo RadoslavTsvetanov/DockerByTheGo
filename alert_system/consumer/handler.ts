@@ -3,7 +3,7 @@ import { handleMessage,type alertMessage } from './messageHandler';
 import { ENV } from './env';
 
 const kafka = new Kafka({
-  clientId: 'my-consumer', // this could be hardcoded
+  clientId: 'my-consumer', // this could be hardcoded since its just the name the client sets for itself
   brokers: [ENV.getKafkaBrokerUrl()],  
 });
 
@@ -28,11 +28,11 @@ const run = async () => {
       
         eachMessage: async ({ topic, partition, message }) => {
         
-          console.log("hui",{
-            partition,
-            offset: message.offset,
-            value: message.value?.toString(),
-          });
+          // console.log("hui",{
+          //   partition,
+          //   offset: message.offset,
+          //   value: message.value?.toString(),
+          // });
 
           const msgValue = message.value?.toString();
           
@@ -42,7 +42,7 @@ const run = async () => {
             console.error('Received an empty or undefined message');
             return;
           }
-          
+
           try {
             const msg: alertMessage = JSON.parse(msgValue)
             handleMessage({

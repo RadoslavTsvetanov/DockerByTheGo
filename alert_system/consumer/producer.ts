@@ -1,39 +1,41 @@
 import { Kafka,type Producer } from "kafkajs";
+import type { alertMessage } from "./messageHandler";
+import { ENV } from "./env";
+import  express from "express";
+import bodyParser from "body-parser";
 
-// Kafka configuration
+const app = express();
+
+app.use(bodyParser.json());
+
 const kafka = new Kafka({
-  clientId: "my-producer",
-  brokers: ["<BROKER_ADDRESS>"], // Replace with your Kafka broker address
+  clientId: "my-producer", // this cpuld be hardcoded since its the name the client assciates with itswlf the important one is the group 
+  brokers: [ENV.getKafkaBrokerUrl()],
 });
+
+
 
 const producer: Producer = kafka.producer();
 
-const run = async () => {
-  try {
-    // Connect the producer
+
+async function sendAlert(alert: alertMessage) {
+    try {
     await producer.connect();
     console.log("Producer connected");
 
-    // Send a message to the Kafka topic
-    const topic = "my-topic"; // Replace with your Kafka topic
-    const messages = [
-      { value: "Hello from Kafka producer in TypeScript!" },
-      { value: "Another message from Kafka producer" },
-    ];
+    const topic = ENV.getTopicNameWhichIsForAlerts(); 
 
-    // Publish messages
     const result = await producer.send({
       topic,
-      messages,
+      messages:[{value: JSON.stringify(alert)}]
     });
 
     console.log("Message sent successfully:", result);
   } catch (error) {
     console.error(`Error sending messages: ${error}`);
   }
-};
+}
 
-// Graceful shutdown
 const shutdown = async () => {
   console.log("Shutting down producer...");
   await producer.disconnect();
@@ -43,4 +45,19 @@ const shutdown = async () => {
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);
 
-run().catch(console.error);
+sendAlert({handlerId:1,content:"hui"}).catch(console.error);
+
+
+
+
+app.post("/alert", async (req, res) => {
+
+  await sendAlert(req.body)
+
+  res.status(200).json({});
+
+})
+
+
+
+app.listen(3000, () => console.log("Server is running on port 3000"));
