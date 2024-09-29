@@ -1,19 +1,3 @@
-/*
-Copyright 2024.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package controller
 
 import (
@@ -37,6 +21,7 @@ type MemoryKeeperReconciler struct {
 	Scheme *runtime.Scheme
 }
 
+// dont touch the below comment
 // +kubebuilder:rbac:groups=core.192.168.49.2,resources=memorykeepers,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core.192.168.49.2,resources=memorykeepers/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=core.192.168.49.2,resources=memorykeepers/finalizers,verbs=update
@@ -66,7 +51,6 @@ func (r *MemoryKeeperReconciler) Reconcile(ctx context.Context, req ctrl.Request
 
 	// TODO: Apply your custom logic based on resource consumption here
 	// E.g., update the status of the MemoryKeeper based on the usage
-	// r.updateMemoryKeeperStatus(memoryKeeper, totalCPUUsage, totalMemoryUsage)
 
 	return ctrl.Result{}, nil
 }
@@ -94,16 +78,87 @@ func (r *MemoryKeeperReconciler) getNamespaceResourceConsumption(namespace strin
 	// Iterate over pod metrics and collect their usage
 	for _, podMetrics := range podMetricsList.Items {
 		for _, container := range podMetrics.Containers {
+			// Retrieve usage values for CPU and memory
+			cpuUsage := container.Usage.Cpu().MilliValue()  // CPU in millicores
+			memoryUsage := container.Usage.Memory().Value() // Memory in bytes
 
-			cpuUsage := container.Usage
-			memoryUsage := container.Usage
-			fmt.Println(cpuUsage, memoryUsage)
-			totalCPUUsage += 0    // in millicores
-			totalMemoryUsage += 0 // in bytes
+			totalCPUUsage += cpuUsage
+			totalMemoryUsage += memoryUsage
 		}
 	}
 
 	return totalCPUUsage, totalMemoryUsage, nil
+}
+
+// getResourceQuota fetches the CPU and Memory resource quota for the namespace
+func (r *MemoryKeeperReconciler) getResourceQuota(namespace string) (int64, int64, error) {
+	resourceQuota := &corev1.ResourceQuota{}
+	err := r.Client.Get(context.TODO(), client.ObjectKey{Name: "resource-quota", Namespace: namespace}, resourceQuota)
+	if err != nil {
+		return 0, 0, fmt.Errorf("error fetching ResourceQuota: %v", err)
+	}
+
+	cpuQuota := resourceQuota.Status.Hard[corev1.ResourceLimitsCPU].MilliValue()
+	memoryQuota := resourceQuota.Status.Hard[corev1.ResourceLimitsMemory].Value()
+
+	return cpuQuota, memoryQuota, nil
+}
+
+// getPodsOfImportance retrieves pods based on an importance level
+func (r *MemoryKeeperReconciler) getPodsOfImportance(namespace string, importanceLevel int64) ([]corev1.Pod, error) {
+	podList := &corev1.PodList{}
+	listOpts := []client.ListOption{
+		client.InNamespace(namespace),
+		client.MatchingLabels{"importance": fmt.Sprintf("%d", importanceLevel)}, // Adjust label as needed
+	}
+	err := r.Client.List(context.TODO(), podList, listOpts...)
+	if err != nil {
+		return nil, fmt.Errorf("error listing pods: %v", err)
+	}
+	return podList.Items, nil
+}
+
+// getPodToDelete selects a pod to delete when resource usage exceeds the quota
+func (r *MemoryKeeperReconciler) getPodToDelete(namespace string) (*corev1.Pod, error) {
+	pods, err := r.getPodsOfImportance(namespace, 1) // Example importance level
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Example: choose the first pod for deletion, modify logic as needed
+	if len(pods) > 0 {
+		return &pods[0], nil
+	}
+
+	return nil, fmt.Errorf("no pod found to delete")
+}
+
+// cleanResources checks resource consumption and deletes pods if usage exceeds the quota
+func (r *MemoryKeeperReconciler) cleanResources(namespace string) error {
+	totalCPUUsage, totalMemoryUsage, err := r.getNamespaceResourceConsumption(namespace)
+	if err != nil {
+		return err
+	}
+
+	cpuQuota, memoryQuota, err := r.getResourceQuota(namespace)
+	if err != nil {
+		return err
+	}
+
+	// If resource usage exceeds quota, delete a pod
+	if totalCPUUsage > cpuQuota || totalMemoryUsage > memoryQuota {
+		podToDelete, err := r.getPodToDelete(namespace)
+		if err != nil {
+			return err
+		}
+		err = r.Client.Delete(context.TODO(), podToDelete)
+		if err != nil {
+			return fmt.Errorf("error deleting pod: %v", err)
+		}
+	}
+
+	return nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -111,54 +166,4 @@ func (r *MemoryKeeperReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1.MemoryKeeper{}).
 		Complete(r)
-}
-
-// func getPodsOfPriority(r *MemoryKeeperReconciler, podImportanceName string, namespace string) ([]corev1.Pod, error) {
-// 	// Step 1: Get the PodImportance resource
-// 	podImportance := &examplev1.PodImportance{}
-// 	err := r.Client.Get(context.TODO(), client.ObjectKey{
-// 		Name:      podImportanceName,
-// 		Namespace: namespace,
-// 	}, podImportance)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	// Step 2: Build the label selector from the PodImportance spec
-// 	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
-// 		MatchLabels: podImportance.Spec.Selector.MatchLabels,
-// 	})
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	// Step 3: List pods matching the label selector in the specified namespace
-// 	podList := &corev1.PodList{}
-// 	listOpts := []client.ListOption{
-// 		client.InNamespace(namespace),
-// 		client.MatchingLabelsSelector{Selector: selector},
-// 	}
-// 	err = r.Client.List(context.TODO(), podList, listOpts...)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	// Step 4: Filter pods based on the importance level if needed
-// 	var filteredPods []corev1.Pod
-// 	for _, pod := range podList.Items {
-// 		if podImportance.Spec.ImportanceLevel == 8 { // Replace 8 with the dynamic value if needed
-// 			filteredPods = append(filteredPods, pod)
-// 		}
-// 	}
-
-// 	return filteredPods, nil
-// }
-
-func getPodsOfPriority(r *MemoryKeeperReconciler, priorityNumber int) ([]pods, error) {
-
-	r.Client.List()
-	for pod := range pods {
-
-	}
-
 }

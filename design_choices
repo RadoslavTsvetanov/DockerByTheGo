@@ -1,0 +1,13 @@
+# Why go for the k8sApi heler
+- go-client is the defacto package with the most adoption and support
+- i was looking for new language after ts fatigue
+
+# Why kafka over rabbitmq
+- rabbitmq is a "simple" queue abstracted with a web interface 
+- kafka combines a publish subsribe and queue model and i needed the functionality for different services to consume the same topic while both needing the topics seperate e.g. consuming a record with one service shouldnrt remove it for the other so like that i can quickly scale up and down the services seperately
+  ```
+    Website Activity Tracking
+    The original use case for Kafka was to be able to rebuild a user activity tracking pipeline as a set of real-time publish-subscribe feeds. This means site activity (page views, searches, or other actions users may take) is published to central topics with one topic per activity type. These feeds are available for subscription for a range of use cases including real-time processing, real-time monitoring, and loading into Hadoop or offline data warehousing systems for offline processing and reporting.
+
+    Activity tracking is often very high volume as many activity messages are generated for each user page view. 
+  ```

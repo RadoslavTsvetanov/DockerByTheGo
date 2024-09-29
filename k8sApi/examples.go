@@ -1,11 +1,34 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
+)
 
 // Note by project i mean a namespace
 
 // this deploys a node js backend and a postgre db and wires them inside a certain project
 const namespace = "ollo"
+
+// deploying a kafka cluster
+func wdrderd() {
+	// kafkaEnvVars := map[string]string{
+	//     "KAFKA_BROKER_ID":       "1",
+	//     "KAFKA_ZOOKEEPER_CONNECT": "zookeeper:2181",
+	//     "KAFKA_ADVERTISED_LISTENERS": "PLAINTEXT://kafka:9092",
+	//     "KAFKA_DEFAULT_REPLICATION_FACTOR": "1",
+	//     "KAFKA_DELETE_TOPIC_ENABLE": "true",
+	// }
+
+	kafkaService := Service{
+		Name:      "my-release-kafka",
+		Namespace: namespace,
+		Labels:    labels,
+		Ports:     []v1.ServicePort{{Port: 9092, TargetPort: intstr.FromInt(9092)}},
+	}
+}
 
 func wwwww() {
 
