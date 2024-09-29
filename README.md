@@ -172,7 +172,9 @@ We believe in giving info whenever we do something which you did not request exp
   ```
 there could be huge amoubnts of alerts which need to be scaled programatically in case of an alert outbreak and i need different consumers to consume the same queue independently
 
-
+## Why custom way to run handlers over lambda lets say:
+- no persstent storage: with lambda leaving a trace on the ysytem i difficlu and needs to be managed externally, also it provides a lot of limitationstht a custom laert sytem would need
+- security: lambdas can easilt be exploited to run a lot of times and i wont have such fine control over it as a k8s pod worker
 
 ## Why golang for the k8sApi heler
 - go-client is the defacto package with the most adoption and support
