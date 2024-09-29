@@ -95,19 +95,32 @@
 ```
 
 # Built in tools:
+
 When setting up the cluster for your happy k8s existence we set up some things for you. Some of the tools and operators are:
+
 - operator which manages your resources consumption so that you dont go over the limit of your tier 
-- **Built-in Monitoring and Alerts**: with managed services if a service goes down it automatically goes up again but it also sets up an alert to a `source`. Sources can be custom but also there are built in ones with email and discord using bot 
+
+- **Built-in Monitoring and Alerts**: with managed services if a service goes down it automatically goes up again but it also sets up an alert to a `source`.
+
 - service mesh
+
 - **Detailed Metrics**: Offer detailed metrics and monitoring tools to track the performance and health of containers and projects. The metrics are exposed on a port and also the pod which is responsible for that does not go in the resource quota so dont bother removing it
-- **Alerting**: Allow users to set up alerts for issues such as crashes or performance degradation, possibly integrating with third-party services like Slack or email. ( make it into an event driven system where alongisde the container you deploy a listener which listens for certain things like restarting etc ... or make it useing logs collector)
+
+- **Alerting**: Allow users to set up alerts for issues such as crashes or performance degradation, possibly integrating with third-party services like Slack or email. ( make it into an event driven system where alongisde the container you deploy a listener which listens for certain things like restarting etc ... or make it useing logs collector). By default there are three alert streams: slack, discord bot and email, but users can define custom alert handlers in the following langs: [js, python and bash]. Each project has an alerts tab where you can see all your custom handlers and the url for your alerts. why a url? - well to be able to send alerts and handle them using different handlers there is an alert collector in which every alert is stored, from there there are consumers for each alert according to the channel id. by using this approach we ensure that alerts are being handled in the orrder they are submitted (not that we dont take in mind the time overhead introduced by your custom handlers). Note custom handlers are excuted inside ephemeral pods to prevent maliicious activity so there are some limitations opposed on you as a handler write, look at custom handler enviremonts for more info
+
+# Custom Handler Enviroments:
+Each channel jobs run inside a pod so no channel has access to the reources of other channel, this way we allow you to have modify the enviroment while protecting you from others channels
+each time a handler is updated the pod is cleaned up
+these pods have resource limitations which unless you have something very complex you probably wont exceed them but if exceeded you need to pay extra for bigger ceilling 
 
 # Automatic TLS/SSL Management:
 
 - Integrate with a certificate authority (e.g., Let's Encrypt) to automatically generate and renew TLS/SSL certificates.
+
 - Provide users with the option to enable HTTPS for their services effortlessly.
 
 - infra as diagram and code: the project has a `/infra` which exposes a diagram from which you can make quick edits to services in  the form of a diagram
+
 - rawdog friendly, you just want the k8s cluster set up with all the additional helpers? - sure you  can configure your kubectl and rawdog it 
 
 
@@ -133,3 +146,6 @@ Our goal is to simplify the usage of the cloud while at the same tyme not settin
 # Custom status codes
 We believe in giving info whenever we do something which you did not request explicitely ( for example killing a service since it exceeded the quota) so we use status codes in our messages, here you can find info abiut them:
 - 707: quota exceeded, this indicates that the reason for the performed action is that the service has exceeded the memeory qoutas, scenarios where you will encounter this are but not all -> killing, increase quota for the resource
+
+
+
