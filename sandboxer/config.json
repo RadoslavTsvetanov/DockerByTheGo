@@ -1,0 +1,13 @@
+{
+    "rules":
+        {
+            "open":{
+                
+            },
+            
+            "run_on_all_syscalls_regrdless_of_type":{
+                "/(google.com)":"not_allow" 
+            }
+        }
+    
+}
