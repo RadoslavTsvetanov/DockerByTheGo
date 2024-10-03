@@ -48,7 +48,9 @@ func main() {
 
 	// fffff()
 
-	exposeService()
+	// exposeService()
 
-	gettingEndpointsInAProjectForOutsideProjectAccess()
+	// gettingEndpointsInAProjectForOutsideProjectAccess()
+
+	runServer()
 }

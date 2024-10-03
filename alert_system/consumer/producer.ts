@@ -48,7 +48,21 @@ process.on("SIGTERM", shutdown);
 sendAlert({handlerId:1,content:"hui"}).catch(console.error);
 
 
+function getLastChannelId() {
+  return 1;
+}
 
+function generateChannelId() {
+  return getLastChannelId()+ 1;
+}
+
+function createNewChannel(channel: {name: string, description: string, code: string }){
+
+
+
+  const newChannelId = generateChannelId();
+
+}
 
 app.post("/alert", async (req, res) => {
 
@@ -58,6 +72,13 @@ app.post("/alert", async (req, res) => {
 
 })
 
+app.post("/channel/new", async (req, res) => { 
+  req.body
+
+  create_deployment_and_service_which_handles_the_execution_of_the_handler_and_after_that_save_somewhere_reference which is id -> url, note you might need an operator for this and also find a way to npt use a map but instead use it as a web server which redirects
+  
+  res.status(200).json({})
+})
 
 
 app.listen(3000, () => console.log("Server is running on port 3000"));

@@ -1,23 +1,27 @@
 export const ENV = {
-    getGroupIdForAlertHandler() {
-        const env =  process.env.GROUP_ID_FOR_ALERTS_HANDLER
+    getEnv(envEntry: string) {
+        const env = process.env[envEntry]
         if (env === null || env === undefined) {
-            throw new Error("Missing CLIENT_ID_FOR_ALERTS_HANDLER environment variable")
+            throw new Error(`Missing ${envEntry} environment variable`)
         }
         return env
+    },
+    getGroupIdForAlertHandler() {
+        return this.getEnv("GROUP_ID_FOR_ALERTS_HANDLER");
     },
     getKafkaBrokerUrl() {
-        const env =  process.env.KAFKA_BROKER_URL
-        if (env === null || env === undefined) {
-            throw new Error("Missing KAFKA_SERVER_URL environment variable")
-        }
-        return env
+        return this.getEnv("KAFKA_BROKER_URL");
     },
     getTopicNameWhichIsForAlerts() {
-        const env =  process.env.ALERTS_TOPIC
-        if (env === null || env === undefined) {
-            throw new Error("Missing TOPIC_NAME_FOR_ALERTS environment variable")
-        }
-        return env
+        return this.getEnv("ALERTS_TOPIC");
+    },
+    getEmailjsTempateId() { 
+        return this.getEnv("EMAILJS_TEMPLATE_ID");
+    },
+    getEmailjsServiceId() {
+        return this.getEnv("EMAILJS_SERVICE_ID");
+    },
+    getEmailjsUserId() {
+        return this.getEnv("EMAIL_JS_USER_ID");
     }
 }

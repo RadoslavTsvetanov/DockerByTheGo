@@ -195,7 +195,6 @@ func createNamespaceProfile(name, namespace string) error {
 		return fmt.Errorf("failed to create role binding: %v", err)
 	}
 
-	// Create the Secret
 	secret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "my-service-account-token",
@@ -722,3 +721,5 @@ func deleteNamespace(clientset *kubernetes.Clientset, namespace string) {
 		fmt.Printf("Successfully deleted namespace %s\n", namespace)
 	}
 }
+
+func createAlertPod() {}
