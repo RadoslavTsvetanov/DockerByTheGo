@@ -176,6 +176,13 @@ there could be huge amoubnts of alerts which need to be scaled programatically i
 - no persstent storage: with lambda leaving a trace on the ysytem i difficlu and needs to be managed externally, also it provides a lot of limitationstht a custom laert sytem would need
 - security: lambdas can easilt be exploited to run a lot of times and i wont have such fine control over it as a k8s pod worker
 
+## Why custom sandbox solution
+- i needed something lightweight since i am monitoring a single file/ process and its subprocesses and threads so i dont need to run full blown edr inside docker
+- i needed something compatible with docker, due to the nature of docker to be lightweight, fast and compact most tools dont run splendidly         or at all in docker
+- i needed something customazible but easy to write most edrs either provide either too robust (picture 1) way of writing rules or too inflexible since most provide a pseudo boolean language so i dcided its best to use regexing alongside this pseudo boolean dsl which is a widely adpoted dsl (the result i am trying to achieve is more or less the below picture which is the implementation in burp suite which i have enjoyed working with)
+<img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.matthewsetter.com%2Fimages%2Fposts%2Fburp-intercept-client-request.png&f=1&nofb=1&ipt=125d6ca56e02a0520fd7ef00281b4f41169d2e9a5e128521fa59d0f46f59459a&ipo=images"/> 
+Note there is a readme in the sandboxer which is more detailed
+- why rust: itss low level and provides access to the libc and diret ptrace, ok but why nit c ? - it is old, type not safe (major red flag for building a sandboxer); the rust compiler is a lot more strict and provides out of bound checks, also i needed somthing performant and as fast as possible (rust matches c in terms of performance)
 ## Why golang for the k8sApi heler
 - go-client is the defacto package with the most adoption and support
 - i was looking for new language after ts fatigue
