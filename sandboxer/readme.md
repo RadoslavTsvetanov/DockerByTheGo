@@ -34,9 +34,15 @@
  
 
     ```
+- use a model like aws policy evaluation logic however instead of explicit denies being the thing that takes presedence explicit allows will be like that since by default in our system everything is allowed by default 
+
+
+
+
+
+
 # Examples
 - in config.json you will see examples for each syscall going througgh all the ways you can make rules
-
 
 
 ```json 

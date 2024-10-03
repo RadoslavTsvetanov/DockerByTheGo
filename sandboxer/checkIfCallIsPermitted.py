@@ -1,79 +1,76 @@
 import json
 import re
-# since the real implementation wont be in python cuz its not a suitable lang for this i will use it for quick protopying and so i wont be using seperate files 
-
+from enum import Enum
 
 ################################################################
 #
-# classes and types
-class SyscallDebugObject:
-    def __init__(self, signature: str, other_data: object):
-        self.signature = signature # for example open("hui.out","rb"), write("foo.txt","buffer_example"), sockconnect("","") etc...;
-        self.other_data = other_data # havent decided what to include yet but it will probably info simmilar to the one provided by strace linux cli util 
+# Classes and Types
 
-type RULE_TYPES = {
+class RULE_TYPES(Enum):
+    REGEX = "REGEX"
+    CUSTOM = "CUSTOM"
 
-
-    "REGEX",
-    "CUSTOM"
-}
-
-type MODIFICATOR_TYPES = {
-    "allow",
-    "not_allow"
-}
-
-class Regex:
-    def __init__(self, regex: str, rule: MODIFICATOR_TYPES) -> None:
-        self.regex = regex
-        self.rule = rule
+class MODIFICATOR_TYPES(Enum):
+    ALLOW = "allow"
+    NOT_ALLOW = "not_allow"
 
 class Rule:
-    def __init__(self, type: RULE_TYPES, content: str, modificator: MODIFICATOR_TYPES) -> None:
-        self.type = type
+    def __init__(self, content: str, modificator: MODIFICATOR_TYPES) -> None:
         self.content = content
         self.modificator = modificator
 
-# 
-#
-#
-#######################################
-
 ################################################################
 #
-# utils needed but not core logic
-def load_json_file(file_path):
-    with open(file_path, 'r') as file:
-        data = json.load(file)
-    return data
+# Core Logic
 
-#
-#
-###########################################################
-
-def satisfies_rule(rule: Rule, syscall):
-    
-    if(rule.type == RULE_TYPES.REGEX):
-        content_of_syscall_inside_the_braces = rule.content[rule.content.find("(")-1:len(rule.content)]
-        if rule.modificator == "allow":
-            return bool(re.match(content_of_syscall_inside_the_braces, syscall))
-        elif rule.modificator == "not_allow":
-            return not bool(re.match(content_of_syscall_inside_the_braces, syscall))
+def to_bool(val):
+    if val == None:
+        return False
     else:
-        return eval("rule.content({syscall})") # something like that i guess
+        return True
 
-def check_if_syscall_is_permitted(syscall:str):
+def satisfies_rule(rule_content: str, syscall: str):
+    content_inside_parens = re.search(r'\((.*?)\)', syscall) # e.g. from open("fiel.txt","rb") we get `"file.txt","rb",""`
     
-    syscalls_rules = load_json_file("./config.json")["rules"]
+    if not content_inside_parens:
+        raise Exception("no content inside parentheses")
     
-    syscall_name =   syscall[0:syscall.find("(")]
-    print(syscall_name)
-    return_object = {
-        "shouldRun": True
-    }
-    for rule in syscalls_rules:
+    content_of_syscall = content_inside_parens.group(1)
     
-        return_object["shouldRun"] = satisfies_rule(rule, syscall)
-            
+    res = re.search(rule_content, content_of_syscall);
 
-check_if_syscall_is_permitted("open()")
+    return to_bool(res) 
+
+def check_if_syscall_is_permitted(syscall: str, ruleset: dict):
+    syscall_name = syscall.split('(')[0]
+    print(f"Checking syscall: {syscall_name}")
+
+    return_object = {"shouldRun": True}
+    
+    # Check for general rules that apply to all syscalls
+    general_rules = ruleset.get("run_on_all_syscalls_regrdless_of_type", {})
+    for rule_content, modificator_str in general_rules.items():
+        modificator = MODIFICATOR_TYPES(modificator_str)
+        
+        if modificator == MODIFICATOR_TYPES.ALLOW and satisfies_rule(rule_content,syscall):
+            return_object["shouldRun"] = True
+            print("entering allow")
+        elif modificator == MODIFICATOR_TYPES.NOT_ALLOW and satisfies_rule(rule_content, syscall):
+            return_object["shouldRun"] = False
+            print("entering not")
+            print("args",rule_content,syscall)
+
+        # if not satisfies_rule(rule_content, modificator, syscall):
+            # return_object["shouldRun"] = False
+    print (syscall,return_object["shouldRun"])
+    syscall_rules = ruleset.get(syscall_name, {})
+    for rule_content, modificator_str in syscall_rules.items():
+        modificator = MODIFICATOR_TYPES(modificator_str)
+        # TODO: refactor the below code to eliminate code duplication with the above checks
+        if modificator == MODIFICATOR_TYPES.ALLOW and satisfies_rule(rule_content,  syscall):
+            return_object["shouldRun"] = True
+        elif modificator == MODIFICATOR_TYPES.NOT_ALLOW and satisfies_rule(rule_content, syscall):
+            return_object["shouldRun"] = False
+        
+    print("end of check -----")
+    return return_object
