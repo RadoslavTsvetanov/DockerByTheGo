@@ -37,7 +37,7 @@ pub fn satisfies_rule(rule_content: &str, syscall: &str) -> bool {
     to_bool(rule_re.find(content_of_syscall))
 }
 
-pub fn check_if_syscall_is_permitted(syscall: &str, ruleset: &HashMap<String, HashMap<String, String>>) -> HashMap<String, bool> {
+pub fn is_syscall_permittedd(syscall: &str, ruleset: &HashMap<String, HashMap<String, String>>) -> HashMap<String, bool> {
     let syscall_name = syscall.split('(').next().unwrap();
     println!("Checking syscall: {}", syscall_name);
 

@@ -1,15 +1,21 @@
 use nix::sys::ptrace;
 use nix::sys::wait::{wait, waitpid, WaitStatus};
 use nix::unistd::{execvp, fork, ForkResult, Pid};
+use std::collections::HashMap;
 use std::ffi::CString;
 use std::os::raw::c_void;
+mod types;
+use crate::types::JsonConfigType;
+mod file_utils;
+use crate::file_utils::load_json;
+mod filter;
+use crate::filter::is_syscall_permittedd; 
+
+
 
 const SYSCALL_WRITE: u64 = 1;
 const SYSCALL_OPEN: u64 = 2;
 
-fn should_syscall_be_executed(_syscall: &str) -> bool {
-    true
-}
 
 fn get_string_arg(target_pid: Pid, addr: usize) -> String {
     let mut buf = Vec::new();
@@ -30,6 +36,14 @@ fn get_string_arg(target_pid: Pid, addr: usize) -> String {
 }
 
 fn intercept_syscalls(target_pid: Pid) {
+    
+    let config: JsonConfigType = match load_json::<JsonConfigType>("/home/x-ae-x/Desktop/DockerByTheGo/sandboxer/config.json"){
+        Ok(config) => config,
+        Err(e) => {
+            panic!("Couldn't load config");
+        }
+    };
+    
     loop {
         match waitpid(target_pid, None) {
             Ok(WaitStatus::Exited(_, _)) | Ok(WaitStatus::Signaled(_, _, _)) => break,
@@ -48,31 +62,45 @@ fn intercept_syscalls(target_pid: Pid) {
             }
         };
 
+        
+
         match regs.orig_rax {
+
             SYSCALL_WRITE => {
                 let fd = regs.rdi;
                 let buf_addr = regs.rsi as usize;
                 let count = regs.rdx;
                 let buf = get_string_arg(target_pid, buf_addr);
                 println!("Intercepted write({}, \"{}\", {})", fd, buf, count);
-                if !should_syscall_be_executed("write") {
-                    println!("Blocking write syscall");
-                    let mut new_regs = regs;
-                    new_regs.orig_rax = u64::MAX; // Invalid syscall number
-                    let _ = ptrace::setregs(target_pid, new_regs);
+                let syscall_name: &str = "write";
+                let res = is_syscall_permittedd(syscall_name, &config); 
+                match res.get("shouldRun") {
+                    Some(true) => {}
+                    Some(false) => {
+                        println!("Blocking syscall");
+                        let mut new_regs = regs;
+                        new_regs.orig_rax = u64::MAX; // Invalid syscall number
+                        let _ = ptrace::setregs(target_pid, new_regs);
+                    }
+                    None => eprintln!("No shouldRun value found"),
                 }
+                
             }
+
             SYSCALL_OPEN => {
                 let pathname_addr = regs.rdi as usize;
                 let pathname = get_string_arg(target_pid, pathname_addr);
                 println!("Intercepted open(\"{}\")", pathname);
-                if !should_syscall_be_executed("open") {
-                    println!("Blocking open syscall");
-                    let mut new_regs = regs;
-                    new_regs.orig_rax = u64::MAX; // Invalid syscall number
-                    let _ = ptrace::setregs(target_pid, new_regs);
+                
+                let res = is_syscall_permittedd("open", &config);
+                match res.get("shouldRun") {    
+                    Some(true) => {},
+                    Some(false) => {},
+                    None => eprintln!("No shouldRun value found"),
                 }
+                
             }
+
             _ => {}
         }
 
@@ -83,6 +111,7 @@ fn intercept_syscalls(target_pid: Pid) {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+
     let args: Vec<String> = std::env::args().collect();
     if args.len() < 2 {
         eprintln!("Usage: {} <program> [args...]", args[0]);
