@@ -192,7 +192,8 @@ Note there is a readme in the sandboxer which is more detailed
 - the alert system: `https://excalidraw.com/#json=TMBT6N24qs6WeQIVBWR2f,iMq1KeAnZfNalI6IxXL3og`
 
 
-
+# Buddies
+- a buddy is an application which extends your current one, fo example dashboard logging etc ..., they can be set both at the `service` level or at the `deployment` level since behind the scenes we as running k8s. They are kinda like coolify services
 
 
 
