@@ -195,7 +195,7 @@ Note there is a readme in the sandboxer which is more detailed
 # Buddies
 - a buddy is an application which extends your current one, fo example dashboard logging etc ..., they can be set both at the `service` level or at the `deployment` level since behind the scenes we as running k8s. They are kinda like coolify services
 
-
+# Rollbacks
 
 # Why choose this tool:
 ## we are ibth aws and vercel
