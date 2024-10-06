@@ -1,5 +1,4 @@
 use nix::sys::ptrace;
-use nix::sys::signal::Signal;
 use nix::sys::wait::{wait, waitpid, WaitStatus};
 use nix::unistd::{execvp, fork, ForkResult, Pid};
 use std::ffi::CString;

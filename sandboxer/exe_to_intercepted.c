@@ -20,8 +20,6 @@ int main() {
     if (fd < 0) {
         perror("open_file_syscall");
     } else {
-        printf("File opened successfully with fd: %d\n", fd);
-        // Don't forget to close the file descriptor when done
         close(fd);
     }
     return 0;
