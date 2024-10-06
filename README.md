@@ -204,8 +204,8 @@ Note there is a readme in the sandboxer which is more detailed
 
 
 
-
-
+# Vendor independent
+## If you want to use other provider you can set up a k8s cluster there and manage all you projects there the tool will still work as expected exc3ept for some vendor sepcific things which where possible we will document in the `other providers` section. The benefits of using our platform is first (the tool always works ax expected without problems) adn second we provide some helpers which we cant possibly do with other vendors (currently none)
 
 
 
