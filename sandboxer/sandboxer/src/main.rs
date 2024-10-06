@@ -1,132 +1,113 @@
-use std::ffi::{CStr, CString};
-use std::mem;
-use std::os::raw::{c_int, c_long, c_char, c_void};
-use std::process::exit;
-use std::ptr;
-use std::ptr::null_mut;
-use std::io::{self, Write};
+use nix::sys::ptrace;
+use nix::sys::signal::Signal;
+use nix::sys::wait::{wait, waitpid, WaitStatus};
+use nix::unistd::{execvp, fork, ForkResult, Pid};
+use std::ffi::CString;
+use std::os::raw::c_void;
 
-use libc::pid_t;
+const SYSCALL_WRITE: u64 = 1;
+const SYSCALL_OPEN: u64 = 2;
 
-#[repr(C)]
-struct UserRegsStruct {
-    rax: c_long,
-    rbx: c_long,
-    rcx: c_long,
-    rdx: c_long,
-    rsi: c_long,
-    rdi: c_long,
-    orig_rax: c_long,
-    rip: c_long,
-    cs: c_long,
-    eflags: c_long,
-    rsp: c_long,
-    ss: c_long,
-}
-
-fn should_syscall_be_executed(syscall: &str) -> bool {
-    // Implement your logic for determining if the syscall should be executed
+fn should_syscall_be_executed(_syscall: &str) -> bool {
     true
 }
 
-fn get_string_arg(target_pid: pid_t, addr: usize) -> io::Result<String> {
+fn get_string_arg(target_pid: Pid, addr: usize) -> String {
     let mut buf = Vec::new();
-    let mut offset = 0;
-
-    loop {
-        let word = unsafe { libc::ptrace(libc::PTRACE_PEEKDATA, target_pid, (addr + offset) as *mut c_void, null_mut()) };
-        if word == -1 && io::Error::last_os_error().kind() != io::ErrorKind::Other {
-            return Err(io::Error::last_os_error());
+    for i in 0..256 {
+        let word = unsafe {
+            ptrace::read(target_pid, (addr + i * std::mem::size_of::<usize>()) as *mut c_void)
+                .unwrap_or(0) as u64
+        };
+        let bytes = word.to_ne_bytes();
+        for &byte in &bytes {
+            if byte == 0 {
+                return String::from_utf8_lossy(&buf).to_string();
+            }
+            buf.push(byte);
         }
-
-        let bytes: [u8; 8] = unsafe { mem::transmute(word as u64) };
-        if let Some(null_pos) = bytes.iter().position(|&b| b == 0) {
-            buf.extend_from_slice(&bytes[..null_pos]);
-            break;
-        }
-        buf.extend_from_slice(&bytes);
-        offset += 8;
     }
-    Ok(String::from_utf8_lossy(&buf).into_owned())
+    String::from_utf8_lossy(&buf).to_string()
 }
 
-fn intercept_syscalls(target_pid: pid_t) -> io::Result<()> {
+fn intercept_syscalls(target_pid: Pid) {
     loop {
-        let mut status: c_int = 0;
-        if unsafe { libc::waitpid(target_pid, &mut status, 0) } == -1 {
-            return Err(io::Error::last_os_error());
+        match waitpid(target_pid, None) {
+            Ok(WaitStatus::Exited(_, _)) | Ok(WaitStatus::Signaled(_, _, _)) => break,
+            Ok(_) => {}
+            Err(e) => {
+                eprintln!("waitpid error: {}", e);
+                break;
+            }
         }
 
-        if libc::WIFEXITED(status) || libc::WIFSIGNALED(status) {
-            break;
-        }
+        let regs = match ptrace::getregs(target_pid) {
+            Ok(regs) => regs,
+            Err(e) => {
+                eprintln!("ptrace::getregs error: {}", e);
+                break;
+            }
+        };
 
-        let mut regs: UserRegsStruct = unsafe { mem::zeroed() };
-        if unsafe { libc::ptrace(libc::PTRACE_GETREGS, target_pid, null_mut(), &mut regs as *mut _ as *mut c_void) } == -1 {
-            return Err(io::Error::last_os_error());
-        }
-
-        match regs.orig_rax as i64 {
-            1 => { // write syscall number
+        match regs.orig_rax {
+            SYSCALL_WRITE => {
                 let fd = regs.rdi;
-                let buf_addr = regs.rsi;
+                let buf_addr = regs.rsi as usize;
                 let count = regs.rdx;
-
-                let buf = get_string_arg(target_pid, buf_addr as usize)?;
+                let buf = get_string_arg(target_pid, buf_addr);
                 println!("Intercepted write({}, \"{}\", {})", fd, buf, count);
-
                 if !should_syscall_be_executed("write") {
                     println!("Blocking write syscall");
-                    regs.orig_rax = -1; // Block the syscall
-                    unsafe { libc::ptrace(libc::PTRACE_SETREGS, target_pid, null_mut(), &regs as *const _ as *mut c_void) };
+                    let mut new_regs = regs;
+                    new_regs.orig_rax = u64::MAX; // Invalid syscall number
+                    let _ = ptrace::setregs(target_pid, new_regs);
                 }
-            },
-            2 => { // open syscall number
-                let pathname_addr = regs.rdi;
-                let pathname = get_string_arg(target_pid, pathname_addr as usize)?;
+            }
+            SYSCALL_OPEN => {
+                let pathname_addr = regs.rdi as usize;
+                let pathname = get_string_arg(target_pid, pathname_addr);
                 println!("Intercepted open(\"{}\")", pathname);
-
                 if !should_syscall_be_executed("open") {
                     println!("Blocking open syscall");
-                    regs.orig_rax = -1;
-                    unsafe { libc::ptrace(libc::PTRACE_SETREGS, target_pid, null_mut(), &regs as *const _ as *mut c_void) };
+                    let mut new_regs = regs;
+                    new_regs.orig_rax = u64::MAX; // Invalid syscall number
+                    let _ = ptrace::setregs(target_pid, new_regs);
                 }
-            },
+            }
             _ => {}
         }
 
-        unsafe { libc::ptrace(libc::PTRACE_SYSCALL, target_pid, null_mut(), null_mut()) }; // Allow syscall to proceed (entry)
-        unsafe { libc::waitpid(target_pid, &mut status, 0) };
-        unsafe { libc::ptrace(libc::PTRACE_SYSCALL, target_pid, null_mut(), null_mut()) }; // Allow syscall to proceed (exit)
+        ptrace::syscall(target_pid, None).unwrap();
+        wait().unwrap();
+        ptrace::syscall(target_pid, None).unwrap();
     }
-    Ok(())
 }
 
-fn main() -> io::Result<()> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = std::env::args().collect();
     if args.len() < 2 {
         eprintln!("Usage: {} <program> [args...]", args[0]);
-        exit(1);
+        return Ok(());
     }
 
-    let child = unsafe { libc::fork() };
-    if child == 0 {
-        // Child process
-        unsafe { libc::ptrace(libc::PTRACE_TRACEME, 0, null_mut(), null_mut()) };
-        let program = CString::new(args[1].clone()).expect("CString::new failed");
-        let args_c: Vec<CString> = args.iter().skip(1).map(|arg| CString::new(arg.clone()).unwrap()).collect();
-        let mut arg_ptrs: Vec<*const c_char> = args_c.iter().map(|arg| arg.as_ptr()).collect();
-        arg_ptrs.push(ptr::null()); // Null-terminate the argument list
-
-        unsafe {
-            libc::execvp(program.as_ptr(), arg_ptrs.as_ptr() as *const *const c_char);
-            eprintln!("execvp failed");
-            exit(1);
+    match unsafe { fork() } {
+        Ok(ForkResult::Child) => {
+            ptrace::traceme().unwrap();
+            let program = CString::new(args[1].clone())?;
+            let args: Vec<CString> = args[2..]
+                .iter()
+                .map(|s| CString::new(s.as_str()).unwrap())
+                .collect();
+            execvp(&program, &args).unwrap();
+            unreachable!();
         }
-    } else if child < 0 {
-        return Err(io::Error::last_os_error());
+        Ok(ForkResult::Parent { child }) => {
+            intercept_syscalls(child);
+        }
+        Err(e) => {
+            eprintln!("fork error: {}", e);
+        }
     }
 
-    // Parent process intercepts syscalls
-    intercept_syscalls(child)
+    Ok(())
 }
