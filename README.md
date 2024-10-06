@@ -127,7 +127,8 @@ these pods have resource limitations which unless you have something very comple
 
 
 
-
+# Container scout
+- it goes through all your projects and checks if any services of yours are vulnerable to known cve\`s, exploits, etc ... and if it is found it fires an `alert` 
 
 
 ## Resource consumption throttling
@@ -189,3 +190,24 @@ Note there is a readme in the sandboxer which is more detailed
 
 ## Some diagrams to visualize better the architecture
 - the alert system: `https://excalidraw.com/#json=TMBT6N24qs6WeQIVBWR2f,iMq1KeAnZfNalI6IxXL3og`
+
+
+
+
+
+
+# Why choose this tool:
+## we are ibth aws and vercel
+- want to rawdog you project using just the kubectl? - you can do it on our platofrm
+- you want highly abstracted vercel aqpproach? - you can achieve it using our tool or use existing projects config. We just provide you with tools and guard rails for you if you want to use them
+- no third party if you want, all of these helpers are deployed locally e.g. the data you pass through it does not go through our servers, we just provide the helpers. Note there are some services like some alerts (for example default email alerts and discird) which do go through our servers but you can also run them locally preconfigured (this introdcues additional billing) to your cluster. Bassically what i mean is that all helpers we provide that makes your life easier also have alternatives which are deployed locally to your cluster instead of going through a centralized server (which for some is security  concern) (TODO : make all preconfigured hek=lpers to be able to be deployed into the cluster and not be centralized). For example the email service is either hosted by us and you use it for free (at the cost of us potentially using this data) or you deploy it locally in the cluster but you will need to pay extra for this running (note: when running your clusters in our custom platfrm some helpers are free of charge - to know whether one is free or not yo just check the docs for the services under `DOCS`)
+
+
+
+
+
+
+
+
+
+# DOCS
