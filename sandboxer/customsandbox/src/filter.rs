@@ -1,8 +1,7 @@
 use regex::Regex;
 use std::collections::HashMap;
+use crate::types::JsonConfigType;
 
-
-#[derive(Debug, PartialEq)]
 pub enum RuleType {
     REGEX,
     CUSTOM,
@@ -37,7 +36,7 @@ pub fn satisfies_rule(rule_content: &str, syscall: &str) -> bool {
     to_bool(rule_re.find(content_of_syscall))
 }
 
-pub fn is_syscall_permittedd(syscall: &str, ruleset: &HashMap<String, HashMap<String, String>>) -> HashMap<String, bool> {
+pub fn is_syscall_permittedd(syscall: &str, ruleset: &JsonConfigType) -> HashMap<String, bool> {
     let syscall_name = syscall.split('(').next().unwrap();
     println!("Checking syscall: {}", syscall_name);
 

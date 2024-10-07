@@ -1,10 +1,9 @@
 use nix::sys::ptrace;
 use nix::sys::wait::{wait, waitpid, WaitStatus};
 use nix::unistd::{execvp, fork, ForkResult, Pid};
-use std::collections::HashMap;
 use std::ffi::CString;
 use std::os::raw::c_void;
-mod types;
+pub mod types;
 use crate::types::JsonConfigType;
 mod file_utils;
 use crate::file_utils::load_json;
@@ -19,6 +18,7 @@ const SYSCALL_OPEN: u64 = 2;
 
 fn get_string_arg(target_pid: Pid, addr: usize) -> String {
     let mut buf = Vec::new();
+
     for i in 0..256 {
         let word = unsafe {
             ptrace::read(target_pid, (addr + i * std::mem::size_of::<usize>()) as *mut c_void)
@@ -36,15 +36,15 @@ fn get_string_arg(target_pid: Pid, addr: usize) -> String {
 }
 
 fn intercept_syscalls(target_pid: Pid) {
-    
     let config: JsonConfigType = match load_json::<JsonConfigType>("/home/x-ae-x/Desktop/DockerByTheGo/sandboxer/config.json"){
         Ok(config) => config,
         Err(e) => {
-            panic!("Couldn't load config");
+            panic!("Couldn't load config, {e}");
         }
     };
     
     loop {
+
         match waitpid(target_pid, None) {
             Ok(WaitStatus::Exited(_, _)) | Ok(WaitStatus::Signaled(_, _, _)) => break,
             Ok(_) => {}
