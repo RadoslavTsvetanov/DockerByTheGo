@@ -23,7 +23,7 @@ async function sendAlert(alert: alertMessage) {
     await producer.connect();
     console.log("Producer connected");
 
-    const topic = ENV.getTopicNameWhichIsForAlerts(); 
+    const topic = ENV.getAlertTopic(); 
 
     const result = await producer.send({
       topic,
@@ -64,9 +64,23 @@ function createNewChannel(channel: {name: string, description: string, code: str
 
 }
 
-app.post("/alert", async (req, res) => {
 
-  await sendAlert(req.body)
+/* 
+example req  
+
+
+{
+  "handlerId": 1,
+  "content": "hui"
+}
+
+
+*/
+
+
+app.post("/alert", async (req, res) => {
+  console.log(req.body.payload)
+  await sendAlert(req.body.payload)
 
   res.status(200).json({});
 
@@ -75,7 +89,7 @@ app.post("/alert", async (req, res) => {
 app.post("/channel/new", async (req, res) => { 
   req.body
 
-  create_deployment_and_service_which_handles_the_execution_of_the_handler_and_after_that_save_somewhere_reference which is id -> url, note you might need an operator for this and also find a way to npt use a map but instead use it as a web server which redirects
+  // create_deployment_and_service_which_handles_the_execution_of_the_handler_and_after_that_save_somewhere_reference which is id -> url, note you might need an operator for this and also find a way to npt use a map but instead use it as a web server which redirects
   
   res.status(200).json({})
 })

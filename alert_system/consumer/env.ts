@@ -1,3 +1,5 @@
+import { getgroups } from "process";
+
 export const ENV = {
     getEnv(envEntry: string) {
         const env = process.env[envEntry]
@@ -9,10 +11,13 @@ export const ENV = {
     getGroupIdForAlertHandler() {
         return this.getEnv("GROUP_ID_FOR_ALERTS_HANDLER");
     },
+    getGroupIdForThirdPartyHandler() {
+        return this.getEnv("GROUP_ID_FOR_THIRD_PARTY_HANDLER");
+    },
     getKafkaBrokerUrl() {
         return this.getEnv("KAFKA_BROKER_URL");
     },
-    getTopicNameWhichIsForAlerts() {
+    getAlertTopic() {
         return this.getEnv("ALERTS_TOPIC");
     },
     getEmailjsTempateId() { 

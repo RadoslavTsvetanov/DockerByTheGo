@@ -1,6 +1,9 @@
+import { type EachMessagePayload } from 'kafkajs';
+import { handleMessage, type alertMessage } from './messageHandler';
+import { setUpKafkaConsumer } from './clientUtils';
 import { Kafka, type Consumer } from 'kafkajs';
-import { handleMessage,type alertMessage } from './messageHandler';
 import { ENV } from './env';
+
 
 const kafka = new Kafka({
   clientId: 'my-consumer', // this could be hardcoded since its just the name the client sets for itself
@@ -11,20 +14,8 @@ const consumer: Consumer = kafka.consumer({ groupId: ENV.getGroupIdForAlertHandl
 
 const topic = ENV.getAlertTopic() ;  
 
-const run = async () => {
-  try {
 
-    
-      await consumer.connect();
-      await consumer.subscribe({ topic, fromBeginning: true });
-    
-    
-      console.log(`Subscribed to topic ${topic}`);
-    
-    
-      await consumer.run({
-      
-        eachMessage: async ({ topic, partition, message }) => {
+const mainHandle = async (payload: EachMessagePayload) => {
         
           // console.log("hui",{
           //   partition,
@@ -32,7 +23,7 @@ const run = async () => {
           //   value: message.value?.toString(),
           // });
 
-          const msgValue = message.value?.toString();
+          const msgValue = payload.message.value?.toString();
           
 
 
@@ -50,21 +41,8 @@ const run = async () => {
           } catch (err) { 
             console.error('Error parsing message:', err);
           }
-        },
-      });
-  
-  } catch (error) {
-    console.error(`Error consuming messages: ${error}`);
-  }
-};
+        }
 
-const shutdown = async () => {
-  console.log('Shutting down consumer...');
-  await consumer.disconnect();
-  process.exit(0);
-};
 
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
 
-run().catch(console.error);
+setUpKafkaConsumer(consumer, topic, mainHandle)
