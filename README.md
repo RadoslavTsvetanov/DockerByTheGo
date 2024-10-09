@@ -142,8 +142,23 @@ Our goal is to simplify the usage of the cloud while at the same tyme not settin
 
 
 
+## Integrated ai helper 
+
+- you can ot out of it 
+- it is being fed data from your config and so you can ask it questions about your project
 
 
+## Decalaritive First
+- by def since it is using k8s it is theoretically declarative but we have introduced an abstraction layer above that in whuch your whole project is a template which you can view and export at any time
+- you can opt out of it
+
+
+
+## Some other helpers we have introduced
+
+### kill rules manager
+#### Since the rules for killing pods in k8s is pretty basic we introduce a better way to manage pods 
+- importance level, this is a resource which you attach to a deployment which specifies how important this process is, why is that helpful? lets say your cluster is out of memory so it starts killing pods, you have no guarantee that the db will be killed which is way worse than just killing one replica of a pod, with our system the thing woth lower priority is killed first, also we provide a web interface to this service which you can accesss from within the cluster in which you can define custom rules what happens when the cluster is out of resources and you can disable this (implementation detail this should also be implemented as custo rule it will just be built in)
 
 ## Custom status codes
 We believe in giving info whenever we do something which you did not request explicitely ( for example killing a service since it exceeded the quota) so we use status codes in our messages, here you can find info abiut them:
