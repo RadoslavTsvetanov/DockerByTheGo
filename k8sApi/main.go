@@ -52,5 +52,7 @@ func main() {
 
 	// gettingEndpointsInAProjectForOutsideProjectAccess()
 
+	just_for_testing_workload_operator()
+
 	runServer()
 }

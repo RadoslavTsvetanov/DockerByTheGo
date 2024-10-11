@@ -15,10 +15,12 @@ type server struct {
 	pb.UnimplementedYourServiceServer
 }
 
-func (s *server) createWorload(ctx context.Context, req *pb.WorkloadRequest) (*pb.WorkloadResponse, error) {
+func (s *server) CreateWorload(ctx context.Context, req *pb.WorkloadRequest) (*pb.WorkloadResponse, error) {
 	// Create a workload handler URL using the provided channelId.
+	fmt.Println(req.ChannelId)
 	workloadHandlerUrl := fmt.Sprintf("http://example.com/workload/%s", req.ChannelId)
 	return &pb.WorkloadResponse{WorkloadHandlerUrl: workloadHandlerUrl}, nil
+	
 }
 
 func runServer() {

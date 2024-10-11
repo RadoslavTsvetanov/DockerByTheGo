@@ -4,34 +4,21 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 
-	"github.com/google/uuid"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
-var adminPolicyRule = []rbacv1.PolicyRule{
-	{
-		APIGroups: []string{"*"}, // Access to all API groups
-		Resources: []string{"*"}, // Access to all resources
-		Verbs:     []string{"*"}, // All verbs (create, delete, update, etc.)
-	},
-}
-
-var clientset *kubernetes.Clientset
 var namesapce_based_role = "koko"
 
 // Function to delete a Kubernetes resource based on its name and type
@@ -128,6 +115,7 @@ func createServiceAccount(name, roleName, namespace string) error {
 
 	return err
 }
+
 func createNamespaceProfile(name, namespace string) error {
 	clientset, err1 := getK8sClient()
 	defaultHandleError(err1)
@@ -213,28 +201,6 @@ func createNamespaceProfile(name, namespace string) error {
 	return nil
 }
 
-func getK8sClient() (*kubernetes.Clientset, error) {
-	if clientset != nil {
-		return clientset, nil
-	}
-
-	var kubeconfig *string
-	if home := homeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-	} else {
-		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
-	}
-	flag.Parse()
-
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
-	if err != nil {
-		return nil, err
-	}
-
-	clientset, err = kubernetes.NewForConfig(config)
-	return clientset, err
-}
-
 func getNodePort() (int32, error) {
 
 	clientset, err := getK8sClient()
@@ -260,102 +226,6 @@ func getNodePort() (int32, error) {
 		}
 	}
 	return 0, err
-}
-
-func exposeContainer(containerName string, projectName string) error {
-	clientset, err := getK8sClient()
-	if err != nil {
-		return fmt.Errorf("failed to get Kubernetes client: %v", err)
-	}
-
-	// Get the service associated with the container
-	service, err := clientset.CoreV1().Services(projectName).Get(context.TODO(), containerName, metav1.GetOptions{})
-	if err != nil {
-		return fmt.Errorf("failed to get service: %v", err)
-	}
-
-	// Check if the service is already of type NodePort
-	if service.Spec.Type == corev1.ServiceTypeNodePort {
-		fmt.Println("The specified service is already of type NodePort.")
-		return nil
-	}
-
-	// Find an available NodePort
-	nodePort, err := getNodePort()
-	if err != nil {
-		return err
-	}
-
-	// Fetch the old port from the existing service
-	if len(service.Spec.Ports) == 0 {
-		return fmt.Errorf("service has no ports defined")
-	}
-	oldPort := service.Spec.Ports[0].Port
-
-	// Update the service to add NodePort
-	service.Spec.Type = corev1.ServiceTypeNodePort
-
-	// Update the service ports
-	service.Spec.Ports[0] = corev1.ServicePort{
-		Port:       oldPort,                      // Keep the existing port
-		TargetPort: intstr.FromInt(int(oldPort)), // Update target port
-		NodePort:   nodePort,                     // Assign the new NodePort
-	}
-
-	// Update the service in Kubernetes
-	_, err = clientset.CoreV1().Services(projectName).Update(context.TODO(), service, metav1.UpdateOptions{})
-	if err != nil {
-		return fmt.Errorf("failed to update service: %v", err)
-	}
-
-	fmt.Printf("NodePort %d added successfully to service %s.\n", nodePort, containerName)
-
-	return nil
-}
-
-func unxeposeContainer(containerName string, namespace string) error {
-	clientset, err := getK8sClient()
-	fmt.Print("lool")
-	service, err := clientset.CoreV1().Services(namespace).Get(context.TODO(), containerName, metav1.GetOptions{})
-	if err != nil {
-		return fmt.Errorf("failed to get service: %v", err)
-	}
-
-	if service.Spec.Type == corev1.ServiceTypeNodePort {
-
-		// Remove NodePort by changing the service type to ClusterIP or another type
-		service.Spec.Type = corev1.ServiceTypeClusterIP
-		// Update the servic``
-		_, err = clientset.CoreV1().Services(namespace).Update(context.TODO(), service, metav1.UpdateOptions{})
-		if err != nil {
-			return fmt.Errorf("failed to update service: %v", err)
-		}
-		fmt.Println("NodePort removed successfully.")
-	} else {
-		fmt.Println("The specified service is not of type NodePort.")
-	}
-
-	return nil
-}
-
-func createNamespace(namespace string) error {
-	clientset, err := getK8sClient()
-	if err != nil {
-		return err
-	}
-
-	ns := &v1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: namespace,
-		},
-	}
-
-	_, err = clientset.CoreV1().Namespaces().Create(context.Background(), ns, metav1.CreateOptions{})
-	if err != nil {
-		return err
-	}
-	fmt.Printf("Namespace %s created successfully.\n", namespace)
-	return nil
 }
 
 func sanitizeLabels(labels map[string]string) {
@@ -406,7 +276,7 @@ func createPod(namespace, name, image string, envVars map[string]string, contain
 	return nil
 }
 
-func createService(namespace, name string, port int32, serviceType v1.ServiceType, labels map[string]string) error {
+func createService(namespace, name string, port int32, serviceType v1.ServiceType, projectNameSelector map[string]string) error {
 	clientset, err := getK8sClient()
 	if err != nil {
 		return err
@@ -414,11 +284,10 @@ func createService(namespace, name string, port int32, serviceType v1.ServiceTyp
 
 	service := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   name,
-			Labels: labels,
+			Name: name,
 		},
 		Spec: v1.ServiceSpec{
-			Selector: labels,
+			Selector: projectNameSelector,
 			Ports: []v1.ServicePort{
 				{
 					Port:       port,
@@ -525,50 +394,6 @@ func CreateDeployment(namespace, name, image string, replicas int32, env map[str
 
 type StringOrNil interface{}
 
-func CreateUnmanagedContainer(namespace string, name StringOrNil, env map[string]string, labels map[string]string, containerImageName string, port int) {
-	switch nameThatForSureIsString := name.(type) {
-	case string:
-		fmt.Printf("Creating pod %s in namespace %s.\n", nameThatForSureIsString, namespace)
-		createPod(namespace, nameThatForSureIsString, "postgres", env, []v1.ContainerPort{
-			{
-				ContainerPort: int32(port),
-			},
-		}, labels)
-
-		createService(namespace, nameThatForSureIsString, int32(port), v1.ServiceTypeNodePort, labels)
-	case nil:
-		fmt.Printf("Creating default pod in namespace %s.\n", namespace)
-		autoGeneratedName := uuid.NewString()
-		createPod(namespace, autoGeneratedName, "postgres", env, []v1.ContainerPort{
-			{
-				ContainerPort: int32(port),
-			},
-		}, labels)
-
-		createService(namespace, autoGeneratedName, int32(port), v1.ServiceTypeNodePort, labels)
-	default:
-		fmt.Printf("Invalid name type: %T\n", nameThatForSureIsString)
-	}
-}
-
-func createManagedContainer(namespace string, name StringOrNil, env map[string]string, labels map[string]string, imageName string, port int) {
-	switch v := name.(type) {
-	case string:
-		fmt.Printf("Creating deployment %s in namespace %s.\n", v, namespace)
-		err := CreateDeployment(namespace, v, imageName, 1, env, labels)
-		defaultHandleError(err)
-		createService(namespace, v, int32(port), v1.ServiceTypeNodePort, labels)
-	case nil:
-		fmt.Printf("Creating default deployment in namespace %s.\n", namespace)
-		autoGeneratedName := uuid.NewString()
-		err := CreateDeployment(namespace, autoGeneratedName, imageName, 1, env, labels)
-		defaultHandleError(err)
-		createService(namespace, autoGeneratedName, int32(port), v1.ServiceTypeNodePort, labels)
-	default:
-		fmt.Printf("Invalid name type: %T\n", v)
-	}
-}
-
 func getUserToken(namespace, secretName string) (string, error) {
 
 	clientset, err := getK8sClient()
@@ -597,14 +422,6 @@ func defaultHandleError(e error) {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", e)
 	}
 }
-
-func homeDir() string {
-	if h := os.Getenv("HOME"); h != "" {
-		return h
-	}
-	return os.Getenv("USERPROFILE") // Windows
-}
-
 func DeployBackend(namespace string, imageName string, envVars map[string]string, labels map[string]string) { // just giving a better name
 	CreateUnmanagedContainer(namespace, imageName, envVars, labels, imageName, 0000)
 }
@@ -665,49 +482,6 @@ func queryAllResources(namespace string) {
 }
 
 // DBs
-
-func Postgre(namespace string, name string, env map[string]string, labels map[string]string) {
-	createManagedContainer(namespace, name, env, labels, "postgres", 5432)
-}
-
-func Mysql(namespace string, name string, env map[string]string, labels map[string]string) {
-	createManagedContainer(namespace, name, env, labels, "mysql", 3306)
-}
-
-func Mongo(namespace string, name string, env map[string]string, labels map[string]string) {
-	createManagedContainer(namespace, name, env, labels, "mongo", 0000)
-}
-
-func Redis(namespace string, name string, env map[string]string, labels map[string]string) {
-	createManagedContainer(namespace, name, env, labels, "redis", 0000)
-}
-
-func setUpProject(name string) {
-	defaultHandleError(createNamespace(name))
-	createRole("admin", "name", []rbacv1.PolicyRule{
-		{
-			APIGroups: []string{"", "extensions", "apps"},
-			Resources: []string{"*"},
-			Verbs:     []string{"*"},
-		},
-		{
-			APIGroups: []string{"batch"},
-			Resources: []string{"jobs", "cronjobs"},
-			Verbs:     []string{"*"},
-		},
-	})
-}
-
-func deleteProject(namespace string) {
-	client, err := getK8sClient()
-	defaultHandleError(err)
-	// Delete the namespace itself
-	deleteNamespace(client, namespace)
-}
-
-func setUpFluentd(namespace string) {
-
-}
 
 func setUpMonitoring(namespace string) {
 

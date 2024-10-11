@@ -30,20 +30,6 @@ func createProjectHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
-
-func createProject(projectName string, creatorName string) map[string]interface{} {
-	createNamespace(projectName)
-	adminroleName := "admin" // default admin role
-	defaultHandleError(createRole(adminroleName, projectName, adminPolicyRule))
-	defaultHandleError(createServiceAccount(creatorName, adminroleName, projectName))
-	token, err := getUserToken(projectName, adminroleName)
-	defaultHandleError(err)
-
-	return map[string]interface{}{
-		"token": token,
-	}
-}
-
 func deleteProjectHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
