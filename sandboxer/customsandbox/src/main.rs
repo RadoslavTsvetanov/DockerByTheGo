@@ -1,13 +1,14 @@
 use nix::sys::ptrace;
 use nix::sys::wait::{wait, waitpid, WaitStatus};
 use nix::unistd::{execvp, fork, ForkResult, Pid};
+use std::borrow::Borrow;
 use std::ffi::CString;
 use std::os::raw::c_void;
-pub mod types;
+mod types;
 use crate::types::JsonConfigType;
 mod file_utils;
 use crate::file_utils::load_json;
-mod filter;
+pub mod filter;
 use crate::filter::is_syscall_permittedd; 
 
 
@@ -73,7 +74,7 @@ fn intercept_syscalls(target_pid: Pid) {
                 let buf = get_string_arg(target_pid, buf_addr);
                 println!("Intercepted write({}, \"{}\", {})", fd, buf, count);
                 let syscall_name: &str = "write";
-                let res = is_syscall_permittedd(syscall_name, &config); 
+                let res = is_syscall_permittedd(syscall_name, config.borrow()); 
                 match res.get("shouldRun") {
                     Some(true) => {}
                     Some(false) => {
@@ -92,7 +93,7 @@ fn intercept_syscalls(target_pid: Pid) {
                 let pathname = get_string_arg(target_pid, pathname_addr);
                 println!("Intercepted open(\"{}\")", pathname);
                 
-                let res = is_syscall_permittedd("open", &config);
+                let res = is_syscall_permittedd("open", config.borrow());
                 match res.get("shouldRun") {    
                     Some(true) => {},
                     Some(false) => {},

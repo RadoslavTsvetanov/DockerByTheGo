@@ -1,7 +1,7 @@
 mod filter;
 use crate::filter::{is_syscall_permittedd,satisfies_rule,ModificatorType, Rule};
 use std::collections::HashMap;
-
+pub mod types;
 
 pub fn add(left: u64, right: u64) -> u64 {
     left + right
@@ -9,6 +9,8 @@ pub fn add(left: u64, right: u64) -> u64 {
 
 #[cfg(test)]
 mod tests {
+
+    use types::{JsonConfigType, SyscallRuleSet};
 
     use super::*;
 
@@ -44,25 +46,33 @@ mod tests {
         assert_eq!(result, 4);
     }
 
-    fn prepopulate_ruleset() -> HashMap<String, HashMap<String, String>>{
-                let mut ruleset: HashMap<String, HashMap<String, String>> = HashMap::new();
+    fn prepopulate_ruleset() -> JsonConfigType{
+        
 
         let mut open_rules: HashMap<String, String> = HashMap::new();
         open_rules.insert(String::from(r"/passwd"), String::from("not_allow"));  // Block access to /passwd
         open_rules.insert(String::from(r"'./.*'"), String::from("allow"));       // Allow access to anything in the current directory
-        ruleset.insert(String::from("open"), open_rules);
 
         let mut general_rules: HashMap<String, String> = HashMap::new();
         general_rules.insert(String::from(r".*google\.com.*"), String::from("not_allow"));  // Block anything involving google.com
-        ruleset.insert(String::from("run_on_all_syscalls_regrdless_of_type"), general_rules);
 
         let mut write_rules: HashMap<String, String> = HashMap::new();
         write_rules.insert(String::from(r".*"), String::from("not_allow"));               // Disable all writing permissions
         write_rules.insert(String::from(r"'koko.txt',.*"), String::from("allow"));        // Allow writing only to koko.txt
-        ruleset.insert(String::from("write"), write_rules);
+
+        let mut all_other_fields: HashMap<String,SyscallRuleSet> = HashMap::new();
+        all_other_fields.insert(String::from("open"), open_rules);
+        all_other_fields.insert(String::from("write"), write_rules);
+
+        let ruleset: JsonConfigType = JsonConfigType{
+            general_rules: general_rules,
+            additional_fields: all_other_fields 
+            
+        };
+
 
         return ruleset;
-    }
+}
 
 
     #[test]
@@ -75,7 +85,7 @@ mod tests {
 //             r"/passwd": "not_allow",   # Block access to /passwd, no quotes are needed
 //             r"'./.*'": "allow"         # Allow access to anything in the current directory
 //         },
-//         "run_on_all_syscalls_regrdless_of_type": {
+//         "general_rules": {
 //             r".*google\.com.*": "not_allow"  # Block anything that involves google.com
 //         },
 //         "write": {
