@@ -227,3 +227,8 @@ Note there is a readme in the sandboxer which is more detailed
 
 
 # DOCS
+
+
+# How does our platform for the tool work for you oaranoid guys
+- when you are on the main page you will see a page called groups
+- each group is an eks behind the scenes and each project is a k8s namespace
