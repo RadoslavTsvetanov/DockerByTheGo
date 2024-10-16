@@ -1,0 +1,1 @@
+The ctx object provided to every pge contains all the utils a page needs [cookies, api, ...] so if a page needs something you add it in `ctx`

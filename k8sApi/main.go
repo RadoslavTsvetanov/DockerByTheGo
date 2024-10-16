@@ -1,7 +1,48 @@
 package main
 
+import (
+	"fmt"
+	. "k8s/primitives"
+	. "k8s/templates"
+)
+
+var namespace = "ooo"
+
+func testApplyingTemplateContainerWithNormalValues() {
+
+	tc := TemplateContainer{
+		ImageName: "nginx",
+		Name:      "nginx-container",
+		Exposure:  Exposure{Type: Exposed},
+		Env: map[string]string{
+			"FOO": "bar",
+		},
+		Mode: Managed,
+		Metadata: TemplateMetadata{
+			Author:      "John Doe",
+			Version:     "1.0.0",
+			Description: "Nginx web server container",
+		},
+		Labels: map[string]string{
+			"app": "nginx",
+		},
+		Port: 80,
+	}
+
+	err := ApplyTemplateToProject(namespace, []TemplateContainer{tc})
+	if err != nil {
+		fmt.Println(err)
+	}
+
+}
+
 func main() {
+
 	// namespace := "testing-rbac-custom-roles"
+
+	fmt.Print(GetServicesFromOutsideTheCluster(namespace))
+
+	// testApplyingTemplateContainerWithNormalValues()
 
 	// envVars := map[string]string{
 	// 	"POSTGRES_USER":     "postgres",
@@ -15,13 +56,13 @@ func main() {
 	// 	"env": "development",
 	// }
 
-	// err := createNamespace(namespace)
-	// defaultHandleError(err)
+	// err := CreateNamespace(namespace)
+	// DefaultHandleError(err)
 
 	// queryAllResources(namespace)
-	// defaultHandleError(createNamespaceRestrictedUser(namespace, "normal-user"))
-	// createNamespace(namespace)
-	// e := createRole("admin", namespace, []rbacv1.PolicyRule{
+	// DefaultHandleError(CreateNamespaceRestrictedUser(namespace, "normal-user"))
+	// CreateNamespace(namespace)
+	// e := CreateRole("admin", namespace, []rbacv1.PolicyRule{
 	// 	{
 	// 		APIGroups: []string{"", "extensions", "apps"},
 	// 		Resources: []string{"*"},
@@ -34,14 +75,23 @@ func main() {
 	// 	},
 	// })
 
-	// defaultHandleError(e)
-	// e = createServiceAccount("pesho", "admin", namespace)
+	// DefaultHandleError(e)
+	// e = CreateServiceAccount("pesho", "admin", namespace)
 
-	// token, err := getUserToken(namespace, "pesho")
+	// token, err := GetUserToken(namespace, "pesho")
 	// fmt.Println(token)
-	// defaultHandleError(err)
+	// DefaultHandleError(err)
 
 	// fmt.Println(createProject("huihuiov", "huiyo"))
 
-	wwwww()
+	// wwwww()
+
+	// fffff()
+
+	// exposeService()
+
+	// gettingEndpointsInAProjectForOutsideProjectAccess()
+
+	// just_for_testing_workload_operator()
+
 }

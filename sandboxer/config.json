@@ -1,0 +1,13 @@
+{
+    "rules": {
+        "open": {
+            "/passwd": "not_allow",   
+            "./.*": "allow"         
+        },
+        "write": {
+            ".*": "not_allow",               
+            "koko.txt": "allow"         
+        }
+    }
+}
+

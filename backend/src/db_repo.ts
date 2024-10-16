@@ -1,81 +1,192 @@
-// 
-import { PrismaClient, User, Project } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 
-export class Database {
-  private prisma: PrismaClient;
+const prisma = new PrismaClient();
 
-  constructor() {
-    this.prisma = new PrismaClient();
-  }
+export const dbRepo = {
+  user: {
+    // User methods
+    async createUser(params: {
+      username: string;
+      password: string;
+      projects: string[];
+    }) {
+      const { username, password, projects } = params;
+      return await prisma.user.create({
+        data: { username, password, projects },
+      });
+    },
 
-  
-  async createUser(username: string, password: string): Promise<User> {
-    return this.prisma.user.create({
-      data: { username, password },
-    });
-  }
+    async getById(params: { id: number }) {
+      return await prisma.user.findUnique({ where: { id: params.id } });
+    },
 
-  
-  async getUserById(userId: number): Promise<User | null> {
-    return this.prisma.user.findUnique({
-      where: { id: userId },
-      include: { projects: true }, 
-    });
-  }
+    async getAll() {
+      return await prisma.user.findMany();
+    },
 
-  
-  async getAllUsers(): Promise<User[]> {
-    return this.prisma.user.findMany({
-      include: { projects: true }, 
-    });
-  }
+    async update(params: {
+      id: number;
+      data: Partial<{ username: string; password: string; projects: string[] }>;
+    }) {
+      const { id, data } = params;
+      return await prisma.user.update({
+        where: { id },
+        data,
+      });
+    },
 
-  
-  async updateUser(userId: number, data: Partial<User>): Promise<User> {
-    return this.prisma.user.update({
-      where: { id: userId },
-      data,
-    });
-  }
+    async delete(params: { id: number }) {
+      return await prisma.user.delete({ where: { id: params.id } });
+    },
+  },
 
-  
-  async deleteUser(userId: number): Promise<User> {
-    return this.prisma.user.delete({
-      where: { id: userId },
-    });
-  }
+  permissions: {
+    async create(params: {
+      type: string;
+      roleId: number;
+      description: string;
+    }) {
+      const { type, roleId, description } = params;
+      return await prisma.permission.create({
+        data: { type, roleId, description },
+      });
+    },
 
-  
-  async createProject(name: string, userId: number): Promise<Project> {
-    return this.prisma.project.create({
-      data: { name, userId },
-    });
-  }
+    async getById(params: { id: number }) {
+      return await prisma.permission.findUnique({ where: { id: params.id } });
+    },
 
-  async getProjectById(projectId: number): Promise<Project | null> {
-    return this.prisma.project.findUnique({
-      where: { id: projectId },
-    });
-  }
+    async getAll() {
+      return await prisma.permission.findMany();
+    },
 
-  
-  async getAllProjects(): Promise<Project[]> {
-    return this.prisma.project.findMany();
-  }
+    async update(params: {
+      id: number;
+      data: Partial<{ type: string; roleId: number; description: string }>;
+    }) {
+      const { id, data } = params;
+      return await prisma.permission.update({
+        where: { id },
+        data,
+      });
+    },
 
-  async updateProject(
-    projectId: number,
-    data: Partial<Project>
-  ): Promise<Project> {
-    return this.prisma.project.update({
-      where: { id: projectId },
-      data,
-    });
-  }
+    async delete(params: { id: number }) {
+      return await prisma.permission.delete({ where: { id: params.id } });
+    },
+  },
 
-  async deleteProject(projectId: number): Promise<Project> {
-    return this.prisma.project.delete({
-      where: { id: projectId },
-    });
-  }
-}
+  role: {
+    async create(params: { name: string; permissions: number[] }) {
+      const { name, permissions } = params;
+      return await prisma.role.create({
+        data: {
+          name,
+          permissions: { connect: permissions.map((id) => ({ id })) },
+        },
+      });
+    },
+
+    async getById(params: { id: number }) {
+      return await prisma.role.findUnique({
+        where: { id: params.id },
+        include: { permissions: true },
+      });
+    },
+
+    async getAll() {
+      return await prisma.role.findMany({ include: { permissions: true } });
+    },
+
+    async update(params: {
+      id: number;
+      data: Partial<{ name: string; permissions: number[] }>;
+    }) {
+      const { id, data } = params;
+      return await prisma.role.update({
+        where: { id },
+        data: {
+          ...data,
+          permissions: data.permissions
+            ? { set: data.permissions.map((id) => ({ id })) }
+            : undefined,
+        },
+      });
+    },
+
+    async delete(params: { id: number }) {
+      return await prisma.role.delete({ where: { id: params.id } });
+    },
+  },
+
+  projects: {
+    async create(params: {
+      name: string;
+      userId: number;
+      usersWithPermissions: any;
+    }) {
+      const { name, userId, usersWithPermissions } = params;
+      return await prisma.project.create({
+        data: { name, userId, usersWithPermissions },
+      });
+    },
+
+    async getById(params: { id: number }) {
+      return await prisma.project.findUnique({ where: { id: params.id } });
+    },
+
+    async getAll() {
+      return await prisma.project.findMany();
+    },
+
+    async update(params: {
+      id: number;
+      data: Partial<{
+        name: string;
+        userId: number;
+        usersWithPermissions: any;
+      }>;
+    }) {
+      const { id, data } = params;
+      return await prisma.project.update({
+        where: { id },
+        data,
+      });
+    },
+
+    async delete(params: { id: number }) {
+      return await prisma.project.delete({ where: { id: params.id } });
+    },
+  },
+
+  template: {
+    async create(params: { name: string; content: object}) {
+      return await prisma.template.create({
+        data: params,
+      });
+    },
+
+    async getByName(params: { name: string }) {
+      return await prisma.template.findFirstOrThrow({ where: params}); // yay this could throw error but no indication from ts side :(
+    },
+
+    async getAll() {
+      return await prisma.template.findMany();
+    },
+
+    async update(params: {
+      id: number;
+      data: Partial<{ name: string; content: string; projectId: number }>;
+    }) {
+      const { id, data } = params;
+      return await prisma.template.update({
+        where: { id },
+        data,
+      });
+    },
+
+    async delete(params: { id: number }) {
+      return await prisma.template.delete({ where: { id: params.id } });
+    },
+  },
+};
