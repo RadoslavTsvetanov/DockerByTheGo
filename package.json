@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "elasticsearch": "^16.7.3",
-    "pq": "^0.0.3"
-  }
-}

@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package workloadApi;
+
+option go_package = "/proto";
+
+service YourService {
+    rpc createWorload(WorkloadRequest) returns (WorkloadResponse);
+}
+
+message WorkloadRequest {
+    string channelId = 1;
+}
+
+message WorkloadResponse {
+    string WorkloadHandlerUrl = 1; // Use a field number instead of a string literal
+}
