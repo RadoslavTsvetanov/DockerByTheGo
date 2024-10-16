@@ -8,6 +8,9 @@ export const ENV = {
         }
         return env
     },
+    getGrpcWorkloadServerUrl() {
+        return this.getEnv("GRPC_WORKLOAD_SERVER_URL")
+    },
     getGroupIdForAlertHandler() {
         return this.getEnv("GROUP_ID_FOR_ALERTS_HANDLER");
     },

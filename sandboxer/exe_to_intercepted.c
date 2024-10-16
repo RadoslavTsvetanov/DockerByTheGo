@@ -1,58 +1,30 @@
-#include <unistd.h>
-#include <sys/syscall.h>
-#include <fcntl.h>
-#include <stdio.h>
-
-// Define AT_FDCWD if it's not available
-#ifndef AT_FDCWD
-#define AT_FDCWD -100
-#endif
-
-// Directly invoke the write syscall (syscall number 1)
-ssize_t write_syscall(int fd, const char *buf, size_t count) {
-    return syscall(SYS_write, fd, buf, count);
-}
-
-// Directly invoke the open syscall (syscall number 2)
-int open_syscall(const char *pathname, int flags, mode_t mode) {
-    return syscall(SYS_openat, AT_FDCWD, pathname, flags, mode);
-}
-
-// Directly invoke the read syscall (syscall number 0)
-ssize_t read_syscall(int fd, char *buf, size_t count) {
-    return syscall(SYS_read, fd, buf, count);
-}
+#include <fcntl.h>    // For open()
+#include <unistd.h>   // For write(), close()
+#include <stdio.h>    // For perror()
 
 int main() {
-    const char *filename = "../output.txt"; // File in the parent directory
-    char buffer[1024]; // Buffer to read file content into
-    
-    // Open the file in the parent directory with read-only permissions
-    int fd = open_syscall(filename, O_RDONLY, 0);
-    
-    if (fd < 0) {
-        perror("open_syscall");
+    // Open the file (creates if not exists, write only, with user read/write permissions)
+    int file_descriptor = open("example.txt", O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+    if (file_descriptor < 0) {
+        perror("Failed to open file");
         return 1;
     }
-    
-    // Read the contents of the file
-    ssize_t bytes_read = read_syscall(fd, buffer, sizeof(buffer) - 1);
-    
-    if (bytes_read < 0) {
-        perror("read_syscall");
-        close(fd);
+
+    // Data to write
+    const char *data = "hui was here";
+    ssize_t bytes_written = write(file_descriptor, data, 14); // 14 is the length of the string
+    if (bytes_written < 0) {
+        perror("Failed to write to file");
+        close(file_descriptor); // Always close the file descriptor
         return 1;
     }
-    
-    // Null-terminate the buffer to safely print it as a string
-    buffer[bytes_read] = '\0';
-    
-    // Print the contents of the file
-    printf("File contents:\n%s\n", buffer);
-    
-    // Close the file descriptor
-    close(fd);
-    
+
+    // Close the file
+    if (close(file_descriptor) < 0) {
+        perror("Failed to close file");
+        return 1;
+    }
+
     return 0;
 }
 
