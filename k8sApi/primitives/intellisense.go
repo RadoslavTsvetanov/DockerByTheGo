@@ -1,6 +1,7 @@
 // this file will provide autoceomplete and intellisense for selecting resources
 // This file provides auto-complete and intellisense for selecting resources.
-package main
+// it will be mostly get functions
+package primitives
 
 import (
 	"context"
@@ -9,12 +10,12 @@ import (
 )
 
 // getServicesFromInsideTheCluster returns a list of service endpoints from the source namespace.
-func getServicesFromInsideTheCluster(targetNamespace string, sourceNamespace string) ([]string, error) {
-	client, err := getK8sClient()
-	defaultHandleError(err)
+func GetServicesFromInsideTheCluster(targetNamespace string, sourceNamespace string) ([]string, error) {
+	client, err := GetK8sClient()
+	DefaultHandleError(err)
 
 	services, err := client.CoreV1().Services(sourceNamespace).List(context.TODO(), metav1.ListOptions{})
-	defaultHandleError(err)
+	DefaultHandleError(err)
 
 	var serviceEndpoints []string
 
@@ -40,9 +41,9 @@ type ServiceExternalEndpoints struct {
 }
 
 // getServicesFromOutsideTheCluster returns external endpoints for services in the specified namespace.
-func getServicesFromOutsideTheCluster(namespace string) ([]ServiceExternalEndpoints, error) {
-	clientset, err := getK8sClient()
-	defaultHandleError(err)
+func GetServicesFromOutsideTheCluster(namespace string) ([]ServiceExternalEndpoints, error) {
+	clientset, err := GetK8sClient()
+	DefaultHandleError(err)
 
 	var serviceEndpoints []ServiceExternalEndpoints
 

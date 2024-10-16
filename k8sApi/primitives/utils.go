@@ -1,7 +1,8 @@
-package main
+package primitives
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -17,7 +18,13 @@ func homeDir() string {
 	return os.Getenv("USERPROFILE") // Windows
 }
 
-var adminPolicyRule = []rbacv1.PolicyRule{
+func DefaultHandleError(e error) {
+	if e != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", e)
+	}
+}
+
+var AdminPolicyRule = []rbacv1.PolicyRule{
 	{
 		APIGroups: []string{"*"}, // Access to all API groups
 		Resources: []string{"*"}, // Access to all resources
@@ -27,7 +34,7 @@ var adminPolicyRule = []rbacv1.PolicyRule{
 
 var clientset *kubernetes.Clientset
 
-func getK8sClient() (*kubernetes.Clientset, error) {
+func GetK8sClient() (*kubernetes.Clientset, error) {
 	if clientset != nil {
 		return clientset, nil
 	}

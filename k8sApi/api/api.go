@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"encoding/json"
@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func addUserToProject() {}
+func addUserToProjectHandler() {}
 
 func createProjectHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -25,11 +25,13 @@ func createProjectHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := createProject(data.ProjectName, data.CreatorName)
-
+	response :=  createProject(data.ProjectName, data.CreatorName)
+	
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
+
+
 func deleteProjectHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
@@ -69,9 +71,16 @@ func getProjectConnectInfoHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func setUpK8sHelperApi() {
-	http.HandleFunc("/createProject", createProjectHandler)
-	http.HandleFunc("/deleteProject", deleteProjectHandler)
-	http.HandleFunc("/getProjectConnectInfo", getProjectConnectInfoHandler)
+	http.HandleFunc("/projects/new", )
+	http.HandleFunc("/projects/:id", )
+	http.HandleFunc("/project/:id/containers/new",)
+	http.HandleFunc("/projects/:id/containers/container_name") // patch, {payload: new_data} 
+	http.HandleFunc("/projects/:id/containers/container_name") // delete
+	http.HandleFunc("projects/:id/roles/new") // for post {}
+
+
+
+
 
 	log.Println("Starting server on :8080...")
 	log.Fatal(http.ListenAndServe(":8080", nil))

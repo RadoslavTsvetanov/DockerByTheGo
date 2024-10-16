@@ -6,7 +6,7 @@ import (
 	"log"
 	"net"
 
-	pb "k8s/k8s/proto"
+	pb "k8s/proto"
 
 	"google.golang.org/grpc"
 )
@@ -20,7 +20,7 @@ func (s *server) CreateWorload(ctx context.Context, req *pb.WorkloadRequest) (*p
 	fmt.Println(req.ChannelId)
 	workloadHandlerUrl := fmt.Sprintf("http://example.com/workload/%s", req.ChannelId)
 	return &pb.WorkloadResponse{WorkloadHandlerUrl: workloadHandlerUrl}, nil
-	
+
 }
 
 func runServer() {

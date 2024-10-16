@@ -1,4 +1,4 @@
-module k8s/k8s
+module k8s
 
 go 1.22.0
 

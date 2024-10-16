@@ -1,11 +1,11 @@
-package main
+package primitives
 
 import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"os"
+	"log"
 	"regexp"
 	"strings"
 
@@ -23,8 +23,8 @@ var namesapce_based_role = "koko"
 
 // Function to delete a Kubernetes resource based on its name and type
 func deleteResource(resourceType, name, namespace string) error {
-	clientset, err := getK8sClient()
-	defaultHandleError(err)
+	clientset, err := GetK8sClient()
+	DefaultHandleError(err)
 	switch resourceType {
 	case "pod":
 		return clientset.CoreV1().Pods(namespace).Delete(context.TODO(), name, metav1.DeleteOptions{})
@@ -38,13 +38,38 @@ func deleteResource(resourceType, name, namespace string) error {
 	}
 }
 
-func createNamespaceAdminUser(name, namespace string) error {
-	return createNamespaceProfile(name, namespace)
+func CreateNamespace(namespace string) error {
+
+	clientset, err := GetK8sClient()
+
+	if err != nil {
+		return fmt.Errorf("error creating Kubernetes client: %v", err)
+	}
+
+	// Define the namespace object
+	ns := &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: namespace,
+		},
+	}
+
+	// Create the namespace
+	_, err = clientset.CoreV1().Namespaces().Create(context.TODO(), ns, metav1.CreateOptions{})
+	if err != nil {
+		return fmt.Errorf("error creating namespace: %v", err)
+	}
+
+	log.Printf("Namespace %s created successfully", namespace)
+	return nil
 }
 
-func createRole(roleName string, namespace string, permissions []rbacv1.PolicyRule) error {
-	clientset, err := getK8sClient()
-	defaultHandleError(err)
+func CreateNamespaceAdminUser(name, namespace string) error {
+	return CreateNamespaceProfile(name, namespace)
+}
+
+func CreateRole(roleName string, namespace string, permissions []rbacv1.PolicyRule) error {
+	clientset, err := GetK8sClient()
+	DefaultHandleError(err)
 	role := &rbacv1.Role{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      roleName,
@@ -61,7 +86,7 @@ func createRole(roleName string, namespace string, permissions []rbacv1.PolicyRu
 	return nil
 }
 
-func createServiceAccount(name, roleName, namespace string) error {
+func CreateServiceAccount(name, roleName, namespace string) error {
 	roleBinding := &rbacv1.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      roleName,
@@ -98,8 +123,8 @@ func createServiceAccount(name, roleName, namespace string) error {
 		return fmt.Errorf("failed to create secret: %v", err)
 	}
 
-	clientset, err1 := getK8sClient()
-	defaultHandleError(err1)
+	clientset, err1 := GetK8sClient()
+	DefaultHandleError(err1)
 	sa := &v1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -116,9 +141,9 @@ func createServiceAccount(name, roleName, namespace string) error {
 	return err
 }
 
-func createNamespaceProfile(name, namespace string) error {
-	clientset, err1 := getK8sClient()
-	defaultHandleError(err1)
+func CreateNamespaceProfile(name, namespace string) error {
+	clientset, err1 := GetK8sClient()
+	DefaultHandleError(err1)
 	sa := &v1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -201,9 +226,9 @@ func createNamespaceProfile(name, namespace string) error {
 	return nil
 }
 
-func getNodePort() (int32, error) {
+func GetNodePort() (int32, error) {
 
-	clientset, err := getK8sClient()
+	clientset, err := GetK8sClient()
 
 	services, err := clientset.CoreV1().Services(corev1.NamespaceAll).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
@@ -236,9 +261,9 @@ func sanitizeLabels(labels map[string]string) {
 
 }
 
-func createPod(namespace, name, image string, envVars map[string]string, containerPorts []v1.ContainerPort, labels map[string]string) error {
+func CreatePod(namespace, name, image string, envVars map[string]string, containerPorts []v1.ContainerPort, labels map[string]string) error {
 
-	clientset, err := getK8sClient()
+	clientset, err := GetK8sClient()
 	if err != nil {
 		return err
 	}
@@ -276,8 +301,8 @@ func createPod(namespace, name, image string, envVars map[string]string, contain
 	return nil
 }
 
-func createService(namespace, name string, port int32, serviceType v1.ServiceType, projectNameSelector map[string]string) error {
-	clientset, err := getK8sClient()
+func CreateService(namespace, name string, port int32, serviceType v1.ServiceType, projectNameSelector map[string]string) error {
+	clientset, err := GetK8sClient()
 	if err != nil {
 		return err
 	}
@@ -337,7 +362,7 @@ func sanitizeInput(input string) string {
 }
 
 func CreateDeployment(namespace, name, image string, replicas int32, env map[string]string, labels map[string]string) error {
-	clientset, err := getK8sClient()
+	clientset, err := GetK8sClient()
 	if err != nil {
 		return err
 	}
@@ -394,9 +419,9 @@ func CreateDeployment(namespace, name, image string, replicas int32, env map[str
 
 type StringOrNil interface{}
 
-func getUserToken(namespace, secretName string) (string, error) {
+func GetUserToken(namespace, secretName string) (string, error) {
 
-	clientset, err := getK8sClient()
+	clientset, err := GetK8sClient()
 	secret, err := clientset.CoreV1().Secrets(namespace).Get(context.Background(), secretName, metav1.GetOptions{})
 
 	if err != nil {
@@ -417,17 +442,9 @@ func getUserToken(namespace, secretName string) (string, error) {
 
 	return string(decodedToken), nil
 }
-func defaultHandleError(e error) {
-	if e != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", e)
-	}
-}
-func DeployBackend(namespace string, imageName string, envVars map[string]string, labels map[string]string) { // just giving a better name
-	CreateUnmanagedContainer(namespace, imageName, envVars, labels, imageName, 0000)
-}
 
 func queryAllResources(namespace string) {
-	clientset, err := getK8sClient()
+	clientset, err := GetK8sClient()
 	if err != nil {
 		fmt.Printf("Error getting Kubernetes client: %v\n", err)
 		return
@@ -487,7 +504,7 @@ func setUpMonitoring(namespace string) {
 
 }
 
-func deleteNamespace(clientset *kubernetes.Clientset, namespace string) {
+func DeleteNamespace(clientset *kubernetes.Clientset, namespace string) {
 	err := clientset.CoreV1().Namespaces().Delete(context.TODO(), namespace, metav1.DeleteOptions{})
 	if err != nil {
 		fmt.Printf("Failed to delete namespace %s: %v\n", namespace, err)
