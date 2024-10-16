@@ -23,6 +23,13 @@ fn to_bool(val: Option<regex::Match>) -> bool {
     val.is_some()
 }
 
+
+fn idk_what_to_do_with_syscall_without_params_so_for_now_it_will_be_abstracted_behind_this_func() -> bool{
+
+    return true; 
+}
+
+
 pub fn satisfies_rule(rule_content: &str, syscall: &str) -> bool {
 
     let re = Regex::new(r"\((.*?)\)").unwrap();
@@ -30,7 +37,7 @@ pub fn satisfies_rule(rule_content: &str, syscall: &str) -> bool {
     let content_inside_parens = re.captures(syscall);
 
     if content_inside_parens.is_none() {
-        println!("no content inside parentheses, {}, debug later why it shows", syscall);
+        return idk_what_to_do_with_syscall_without_params_so_for_now_it_will_be_abstracted_behind_this_func();
     }
 
     let content_of_syscall = content_inside_parens.unwrap().get(1).unwrap().as_str();
@@ -79,6 +86,7 @@ pub fn is_syscall_permittedd(syscall: &str, ruleset: &JsonConfigType) -> HashMap
                 let modificator = match modificator_str.as_str() {
                     "allow" => ModificatorType::Allow,
                     "not_allow" => ModificatorType::NotAllow,
+                    _ => panic!("Invalid modificator"),
                 };
 
                 if modificator == ModificatorType::Allow && satisfies_rule(rule_content, syscall) {

@@ -1,9 +1,12 @@
 import { Kafka,type Producer } from "kafkajs";
 import type { alertMessage } from "./messageHandler";
 import { ENV } from "./env";
-import  express from "express";
+import  express, { response } from "express";
 import bodyParser from "body-parser";
-
+import { YourServiceClient, WorkloadRequest, WorkloadResponse } from "./protos/workloadApi";
+import { ChannelCredentials, type ServiceError } from "@grpc/grpc-js";
+import { error } from "console";
+import { exit } from "process";
 const app = express();
 
 app.use(bodyParser.json());
@@ -58,8 +61,6 @@ function generateChannelId() {
 
 function createNewChannel(channel: {name: string, description: string, code: string }){
 
-
-
   const newChannelId = generateChannelId();
 
 }
@@ -87,10 +88,19 @@ app.post("/alert", async (req, res) => {
 })
 
 app.post("/channel/new", async (req, res) => { 
-  req.body
-
+    const client = new YourServiceClient(ENV.getGrpcWorkloadServerUrl(),ChannelCredentials.createInsecure())
   // create_deployment_and_service_which_handles_the_execution_of_the_handler_and_after_that_save_somewhere_reference which is id -> url, note you might need an operator for this and also find a way to npt use a map but instead use it as a web server which redirects
-  
+  client.createWorload({channelId: req.body.channelId}, (error: ServiceError | null, response: WorkloadResponse) => {
+    console.log(req.body)
+    if (error) {
+      console.log(error)
+      exit()
+    }
+
+    
+    console.log(response.WorkloadHandlerUrl)
+  })
+
   res.status(200).json({})
 })
 

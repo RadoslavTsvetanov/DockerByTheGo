@@ -1,0 +1,23 @@
+# permissions for end users to view importancelevels.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: memmory-keeper
+    app.kubernetes.io/managed-by: kustomize
+  name: importancelevel-viewer-role
+rules:
+- apiGroups:
+  - custom.my.domain
+  resources:
+  - importancelevels
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - custom.my.domain
+  resources:
+  - importancelevels/status
+  verbs:
+  - get

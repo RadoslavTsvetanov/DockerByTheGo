@@ -1,0 +1,9 @@
+apiVersion: custom.my.domain/v1
+kind: ImportanceLevel
+metadata:
+  labels:
+    app.kubernetes.io/name: memmory-keeper
+    app.kubernetes.io/managed-by: kustomize
+  name: importancelevel-sample
+spec:
+  # TODO(user): Add fields here
