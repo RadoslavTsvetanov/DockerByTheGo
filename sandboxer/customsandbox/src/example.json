@@ -1,16 +1,16 @@
 {
-  "rules": {
     "general_rules": {
-      "google":"allow"
+      "google":"allow",
+      "example.*txt": "not_allow"
     },
     "open": {
-      "/passwd": "not_allow",
-      "./.*": "allow"
+      "/passwd": "not_allow"
     },
     "write": {
-      ".*": "not_allow",
-      "koko.txt": "allow"
+      "koko.txt": "allow",
+      "=n": "not_allow"
+    },
+    "openat": {
+      "example.*txt": "not_allow"
     }
-  }
 }
-
