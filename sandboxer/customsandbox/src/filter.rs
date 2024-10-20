@@ -14,11 +14,6 @@ pub enum ModificatorType {
     NotAllow,
 }
 
-pub struct Rule {
-    pub content: String,
-    pub modificator: ModificatorType,
-}
-
 fn to_bool(val: Option<regex::Match>) -> bool {
     val.is_some()
 }
@@ -26,10 +21,15 @@ fn to_bool(val: Option<regex::Match>) -> bool {
 
 fn idk_what_to_do_with_syscall_without_params_so_for_now_it_will_be_abstracted_behind_this_func() -> bool{
 
-    return true; 
+    return false;
 }
 
-
+/*
+here is an example of how the function works
+satisfies_rule("example.*txt","openat('example.txt',"ft")")
+we get the content inside the params -> 'example.txt','ft'
+and we check it against the regex for any matches and if it finds the string it returns true
+ */
 pub fn satisfies_rule(rule_content: &str, syscall: &str) -> bool {
 
     let re = Regex::new(r"\((.*?)\)").unwrap();
@@ -47,16 +47,16 @@ pub fn satisfies_rule(rule_content: &str, syscall: &str) -> bool {
 }
 
 
-pub fn is_syscall_permittedd(syscall: &str, ruleset: &JsonConfigType) -> HashMap<String, bool> {
+pub fn is_syscall_permittedd(syscall: &str, ruleset: &JsonConfigType) -> bool {
 
 
     let syscall_name = syscall.split('(').next().unwrap();
-    println!("Checking syscall: {}", syscall_name);
 
 
-    let mut return_object = HashMap::new();
-    return_object.insert(String::from("shouldRun"), true);
-
+    let mut should_run = true;
+    if syscall.contains("=n") {
+        println!("just for debugging");
+    }
 
     for (rule_content,modificator_str ) in ruleset.general_rules.clone() {
         let modificator = match modificator_str.as_str()  {
@@ -65,24 +65,21 @@ pub fn is_syscall_permittedd(syscall: &str, ruleset: &JsonConfigType) -> HashMap
             _ => panic!("Invalid modificator"),
         };
 
-        if modificator == ModificatorType::Allow && satisfies_rule(rule_content.as_str(), syscall) {
-            println!("Entering allow");
-            return_object.insert(String::from("shouldRun"), true);
+        let is_rule_satisfied = satisfies_rule(rule_content.as_str(), syscall);
 
-        }else if modificator == ModificatorType::NotAllow && satisfies_rule(&rule_content.as_str(), syscall) {
-            println!("Entering not");
-            println!("Args: {}, {}", rule_content, syscall);
-            return_object.insert(String::from("shouldRun"), false);
+        if modificator == ModificatorType::Allow && is_rule_satisfied {
+            should_run = true;
+
+        }else if modificator == ModificatorType::NotAllow && is_rule_satisfied {
+            should_run = false;
         }
+
     }
 
 
-    println!("{}: {:?}", syscall, return_object.get("shouldRun").unwrap());
-
-
     match  ruleset.additional_fields.get(syscall_name) {
-        Some(rules) => {
-            for (rule_content, modificator_str) in rules {
+        Some(rulesSet) => {
+            for (rule_content, modificator_str) in rulesSet {
                 let modificator = match modificator_str.as_str() {
                     "allow" => ModificatorType::Allow,
                     "not_allow" => ModificatorType::NotAllow,
@@ -90,19 +87,17 @@ pub fn is_syscall_permittedd(syscall: &str, ruleset: &JsonConfigType) -> HashMap
                 };
 
                 if modificator == ModificatorType::Allow && satisfies_rule(rule_content, syscall) {
-                    return_object.insert(String::from("shouldRun"), true);
+                    should_run = true;
                 } else if modificator == ModificatorType::NotAllow && satisfies_rule(rule_content, syscall) {
-                    return_object.insert(String::from("shouldRun"), false);
+                    should_run = false;
                 }
             }
         }
-        None => {
-            panic!("no rule detceted")
-        }  // No additional rules found for this syscall
+        None => {} // TODO: decide what to do if no rule is found
     }
-    println!("End of check -----");
-    return_object
 
+
+    should_run
 
 
 }

@@ -62,10 +62,8 @@ no ruleSet detceted for syscall Unknown syscall: 5
 Blocking syscall: Unknown syscall: 5
 no ruleSet detceted for syscall Unknown syscall: 9
 Blocking syscall: Unknown syscall: 9
-content inside params 3, "", 1, 2
-content inside params 3, "", 1, 2
-content inside params 3, "", 1, 2
-allowing syscall,openat(3, "", 1, 2)
+no ruleSet detceted for syscall Unknown syscall: 3
+Blocking syscall: Unknown syscall: 3
 no ruleSet detceted for syscall Unknown syscall: 257
 Blocking syscall: Unknown syscall: 257
 no ruleSet detceted for syscall Unknown syscall: 0
@@ -86,10 +84,8 @@ no ruleSet detceted for syscall Unknown syscall: 9
 Blocking syscall: Unknown syscall: 9
 no ruleSet detceted for syscall Unknown syscall: 9
 Blocking syscall: Unknown syscall: 9
-content inside params 3, "", 1, 3221225474
-content inside params 3, "", 1, 3221225474
-content inside params 3, "", 1, 3221225474
-allowing syscall,openat(3, "", 1, 3221225474)
+no ruleSet detceted for syscall Unknown syscall: 3
+Blocking syscall: Unknown syscall: 3
 no ruleSet detceted for syscall Unknown syscall: 9
 Blocking syscall: Unknown syscall: 9
 no ruleSet detceted for syscall Unknown syscall: 158
@@ -112,7 +108,5 @@ no ruleSet detceted for syscall Unknown syscall: 11
 Blocking syscall: Unknown syscall: 11
 no ruleSet detceted for syscall Unknown syscall: 257
 Blocking syscall: Unknown syscall: 257
-content inside params 3, "example.txt", 0, 384
-content inside params 3, "example.txt", 0, 384
-content inside params 3, "example.txt", 0, 384
-Blocking syscall: openat(3, "example.txt", 0, 384)
+no ruleSet detceted for syscall Unknown syscall: 3
+Blocking syscall: Unknown syscall: 3
