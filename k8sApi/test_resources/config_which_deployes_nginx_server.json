@@ -1,0 +1,20 @@
+{
+  "imageName": "nginx",
+  "name": "nginx-container",
+  "exposure": {
+    "type": "exposed"
+  },
+  "env": {
+    "FOO": "bar"
+  },
+  "mode": "managed",
+  "metadata": {
+    "author": "John Doe",
+    "version": "1.0.0",
+    "description": "Nginx web server container"
+  },
+  "labels": {
+    "app": "nginx"
+  },
+  "port": 80
+}

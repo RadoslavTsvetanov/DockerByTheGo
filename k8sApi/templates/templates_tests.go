@@ -31,3 +31,4 @@ func testApplyingTemplateContainerWithNormalValues(t *testing.T) {
 	}
 
 }
+
