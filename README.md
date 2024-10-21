@@ -1,37 +1,19 @@
 # Overview of the project
-- platform where you can easily deploy your docker containers
-- to deploy a docker container you create a `project` 
-- in a project you can create container and choose from a variety of container `options`
-- to deploy a container you just have to specify a docker img from the docker repository
+- platform where you can easily deploy all kinds of `application`s which work on the base of docker container  
+- to deploy an `application` you create a `project` 
+- in a `project` you can create `application` and choose from a variety of `application` `options`
+- to deploy a  you just have to specify a docker img from the docker repository or  a custom registry but additional set up is required so you will need to do these [steps] (#cuatom-id)
 - some `options` include:
-	- expose -> gives it a publicly accessible url to ssh into or if its some kind of server to expose it to the internet
+	- expose -> gives it a publicly accessible url to ssh into or if its some kind of db to expose it to the internet
 	- deplyment_type:
 		- self managed (if it stops it stops)
-		- managed ( it gets restarted and sends you a notificagtion with info about the crash )
-- also you can give `tags` to your containers so that you can easily query them 
-- roles:
-	- by default you are assigned an admin role 
-	- you can create roles and assign them to other people which you invite (where that will be useful? -> lets say ypu have an issue and you ask  random person on the internet to help you, you wouldnt want to trust them so you justassign them read privileges)
-  - also each `role` needs permissions to function, a `permission` is a single unit of rights which gives access to a given action (e.g.  read, write ( you can only add not remove ), invite, delete).
-    For example the admin role hasa the following permissions:
-    ```
-
-    {
-      
-      write: true,
-      delete: true,
-      invite: true,
-      canSnapshot: true,
-      
-    }
-
-    ```
-
+		- managed ( it gets restarted and sends you a notification with info about the crash )
+- also you can give `tags` to your `application`s so that you can easily query them 
 - **Volume Management**: Provide persistent storage options that can be attached to containers, enabling stateful services and data persistence.
 - also each `project` dashboard has a `metrics` tab where you can see all kinds of useful info 
 - also if you need two containers to communicate you dont need to expose two containers to internet but instead access them within the same project network 
 - also you can easily `stop` containers or projects and delete them or `suspend` them so that you can easily get them back up while paying only for storage and not for compute  
-- also the api is exposed publicly for each user e.g. a user can control their resources programatically where he just needs an api key genersted from options 
+- also the api is exposed publicly for each user e.g. a user can control their resources programatically where he just needs an api key genersted from options which is just the user role token which is in your browser ( this token is different from auth token foe the ebsite, since by default all your user keys are stored in the browser for each role you have signed up with /* more detailed explanation in rbac */)
 - also since a lot of web dev things are redundant you can specify templates in which you configure most settings and leave a few of them blank -> an example where it would be useful is deploying a backend connecting to a db and a backup service accessing the db. Here is an example: (keep in mind there are some globally provided variables like the network which you canalso specify) 
 ```
   {
@@ -213,22 +195,52 @@ Note there is a readme in the sandboxer which is more detailed
 # Rollbacks
 
 # Why choose this tool:
-## we are ibth aws and vercel
+## we are both aws and vercel
 - want to rawdog you project using just the kubectl? - you can do it on our platofrm
 - you want highly abstracted vercel aqpproach? - you can achieve it using our tool or use existing projects config. We just provide you with tools and guard rails for you if you want to use them
 - no third party if you want, all of these helpers are deployed locally e.g. the data you pass through it does not go through our servers, we just provide the helpers. Note there are some services like some alerts (for example default email alerts and discird) which do go through our servers but you can also run them locally preconfigured (this introdcues additional billing) to your cluster. Bassically what i mean is that all helpers we provide that makes your life easier also have alternatives which are deployed locally to your cluster instead of going through a centralized server (which for some is security  concern) (TODO : make all preconfigured hek=lpers to be able to be deployed into the cluster and not be centralized). For example the email service is either hosted by us and you use it for free (at the cost of us potentially using this data) or you deploy it locally in the cluster but you will need to pay extra for this running (note: when running your clusters in our custom platfrm some helpers are free of charge - to know whether one is free or not yo just check the docs for the services under `DOCS`)
+- ease of use while using your own infra, most if not all easy to use platforms are highly abstracted closed source providers, we chnage that by making our tool to just need a vps or a cluster and the tool spin ups a local gui which you can access to use the same ui we have in our frontend (although support for it might lack version updating, also running this gui will increase the resource consumtion since you are running it locally, just like portainer)
 
-
+# Adding a custom registry {#custom-id}
+- in `project settings` click on `add new container registry`
 
 # Vendor independent
 ## If you want to use other provider you can set up a k8s cluster there and manage all you projects there the tool will still work as expected exc3ept for some vendor sepcific things which where possible we will document in the `other providers` section. The benefits of using our platform is first (the tool always works ax expected without problems) adn second we provide some helpers which we cant possibly do with other vendors (currently none)
 
 
+# RBAC 
+
+## Roles:
+- when you are creating a project by default the creator is assigned an admin role 
+- you can create roles and assign them to other people which you invite (where that will be useful? -> lets say ypu have an issue and you ask  random person on the internet to help you, you wouldnt want to trust them so you just assign them read privileges, note we rate limit read only requests since they dont requi)
+- There are two ways clients can use roles
+  - assign them to a user that way whenever an authnticated request is fired against the project the permissions are hecked
+  - create a key which is associated with a token (behind the scenes you just assign it to a user which is created dynamically and when the token expires it is removed dynamically, this could be changed later ) 
+- also each `role` needs permissions to function, a `permission` is a single unit of rights which gives access to a given action (e.g.  read, write ( you can only add not remove ), invite, delete).
+    For example the admin role hasa the following permissions:
+
+  ```
+
+  {
+      write: true,
+      delete: true,
+      invite: true,
+      canSnapshot: true,
+      
+  }
+
+    ```
 
 
 # DOCS
 
 
-# How does our platform for the tool work for you oaranoid guys
+# How does our platform for the tool work for you paranoid guys that want to know how everything works so we will save you some digging
 - when you are on the main page you will see a page called groups
+
+
+
+
+
+
 - each group is an eks behind the scenes and each project is a k8s namespace
