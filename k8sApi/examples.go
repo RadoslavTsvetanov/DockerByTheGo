@@ -1,10 +1,10 @@
-package main 
+package main
 
 // import (
 // 	"fmt"
 // )
 
-// // Note by project i mean a namespace
+// Note by project i mean a namespace
 
 // // this deploys a node js backend and a postgre db and wires them inside a certain project
 // const namespace = "alerts-workloads-manager-system"
@@ -45,7 +45,7 @@ package main
 // 	CreateNamespace(namespace)
 
 // 	// createManagedContainer(namespace, "nodenackend", postgreEnv, labels, "radoslav123/node-postgres-test", 3000)
-// 	Postgre(namespace, "primary-db-v-2", postgreEnv, labels)
+// Postgre(namespace, "primary-db-v-2", postgreEnv, labels)
 // 	// Mysql(namespace, "primary-db-mysql", mysqlenvVars, labels)
 // 	createManagedContainer(namespace, "main-app-to-connect-to-db", appEnv, appLabels, "radoslav123/temp-temp:latest", 3000)
 
@@ -71,31 +71,31 @@ package main
 
 // }
 
-// func gettingAllEndpointsInAProjectForInProjectAccess() {
+// // func gettingAllEndpointsInAProjectForInProjectAccess() {
 
-// 	serviceEndpoints, err := getServicesFromInsideTheCluster(namespace, namespace)
-// 	DefaultHandleError(err)
+// // 	serviceEndpoints, err := getServicesFromInsideTheCluster(namespace, namespace)
+// // 	DefaultHandleError(err)
 
-// 	for _, endpoint := range serviceEndpoints {
+// // 	for _, endpoint := range serviceEndpoints {
 
-// 		fmt.Println(endpoint)
+// // 		fmt.Println(endpoint)
 
-// 	}
+// // 	}
 
-// }
+// // }
 
-// func gettingEndpointsInAProjectForOutsideProjectAccess() {
+// // // func gettingEndpointsInAProjectForOutsideProjectAccess() {
 
-// 	serviceEndpoints, err := getServicesFromOutsideTheCluster(namespace)
-// 	DefaultHandleError(err)
+// // // 	serviceEndpoints, err := getServicesFromOutsideTheCluster(namespace)
+// // // 	DefaultHandleError(err)
 
-// 	for _, endpoints := range serviceEndpoints {
+// // // 	for _, endpoints := range serviceEndpoints {
 
-// 		fmt.Println(endpoints)
+// // // 		fmt.Println(endpoints)
 
-// 	}
+// // // 	}
 
-// }
+// // // }
 
 // func just_for_testing_workload_operator() {
 

@@ -12,7 +12,7 @@ package main
 // )
 
 // func Postgre(namespace string, name string, env map[string]string, labels map[string]string) {
-// 	createManagedContainer(namespace, name, env, labels, "postgres", 5432)
+	// createManagedContainer(namespace, name, env, labels, "postgres", 5432)
 // }
 
 // func Mysql(namespace string, name string, env map[string]string, labels map[string]string) {

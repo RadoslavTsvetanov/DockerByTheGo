@@ -36,8 +36,9 @@ func GetServicesFromInsideTheCluster(targetNamespace string, sourceNamespace str
 
 // ServiceExternalEndpoints defines the structure for external service endpoints.
 type ServiceExternalEndpoints struct {
-	ExternalIPs   []string
-	ExternalPorts []int
+	ExternalIPs                         []string
+	ExternalPorts                       []int
+	DeploymentToWhichItRedirectsTraffic string
 }
 
 // getServicesFromOutsideTheCluster returns external endpoints for services in the specified namespace.
@@ -64,8 +65,9 @@ func GetServicesFromOutsideTheCluster(namespace string) ([]ServiceExternalEndpoi
 		}
 
 		serviceEndpoints = append(serviceEndpoints, ServiceExternalEndpoints{
-			ExternalIPs:   externalIPs,
-			ExternalPorts: externalPorts,
+			ExternalIPs:                         externalIPs,
+			ExternalPorts:                       externalPorts,
+			DeploymentToWhichItRedirectsTraffic: service.Spec.Selector["projectname"],
 		})
 	}
 

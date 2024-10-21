@@ -1,0 +1,51 @@
+{
+    "entries":[{
+        "name":"my-postgres",
+        "imageName": "postgres",
+        "exposure": {
+            "type":"unexposed"
+        },
+        "env":{
+            "POSTGRES_USER":     "postgres",
+            "POSTGRES_PASSWORD": "kl4fr9fUDS",
+            "POSTGRES_DB":       "postgres",
+            "POSTGRES_HOST":     "my-release-postgresql",
+            "POSTGRES_PORT":     "5432"
+        },
+        "mode":"unmanaged",
+        "metadata":{
+            "author":"John Doe",
+            "version":"1.0.0",
+            "description":"PostgreSQL database container"
+        },
+        "labels":{
+            "app":"back-up-db"
+        },
+        "port":5432
+    },
+    {
+        "name":"my-server",
+        "imageName":"radoslav123/temp-temp:latest",
+        "exposure":{
+            "type":"exposed"
+        },
+        "env":{
+            "PG_HOST":     "primary-db-v-2",
+            "PG_PORT":     "5432",
+            "PG_USER":     "postgres",
+            "PG_PASSWORD": "kl4fr9fUDS",
+            "PG_DATABASE": "postgres"
+        
+        },
+        "mode":"managed", 
+        "metadata":{
+            "author":"John Doe",
+            "version":"1.0.0",
+            "description":"Node.js server container"
+        },
+        "labels":{
+            "app":"server"
+        },
+        "port":3000
+    }]
+}
