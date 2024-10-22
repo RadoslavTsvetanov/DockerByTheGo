@@ -14,7 +14,7 @@
 - also if you need two containers to communicate you dont need to expose two containers to internet but instead access them within the same project network 
 - also you can easily `stop` containers or projects anddelete them or `suspend` them so that you can easily get them back up while paying only for storage and not for compute  
 - also the api is exposed publicly for each user e.g. a user can control their resources programatically where he just needs an api key genersted from options which is just the user role token which is in your browser ( this token is different from auth token foe the ebsite, since by default all your user keys are stored in the browser for each role you have signed up with /* more detailed explanation in rbac */)
-- also since a lot of web dev things are redundant you can specify templates in which you configure most settings and leave a few of them blank -> an example where it would be useful is deploying a backend connecting to a db and a backup service accessing the db. Here is an example: (keep in mind there are some globally provided variables like the network which you canalso specify) 
+- also since a lot of web dev things are redundant (for example spining up a postgre db) you can specify or browse templates in which you configure most settings and leave a few of them blank -> an example where it would be useful is deploying a backend connecting to a db and a backup service accessing the db. Here is an example: (keep in mind there are some globally provided variables like the network which you canalso specify) 
 ```
   {
   "project": {
