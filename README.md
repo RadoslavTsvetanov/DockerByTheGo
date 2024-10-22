@@ -237,7 +237,7 @@ you can take a `snapshot` of your project and  if you change your project and so
 # Getting started
 ## there are 3 ways to get started
 - use our platform with a managed cluster from us (not much set up needed on your behalf)
-- install our docker container on the machine your kubectl is (why not inside the cluster? - since it is still an application it could increase the k8s clustwr resource consumption)
+- install our docker container on the machine your kubectl is (why not inside the cluster? - since it is still an application it could increase the k8s clustwr resource consumption), note when spinning it up no matter what access you havev to a cluster all actions will show and if you have insufficient permissions you will recieve unauthenticated error
 - inside the cluster (very easy set up but will take somw of the resources of the cluster)
 
 # Forum
@@ -264,3 +264,8 @@ you can take a `snapshot` of your project and  if you change your project and so
 
 
 - each group is an eks behind the scenes and each project is a k8s namespace
+
+
+
+# Dump, dont read this
+there are two ways to authenticate, one is to treat the frontend as a client which detects your kubeconfig service account key and sends it with every request and the handler on apihelper does the rest, the other is to spin up a local db inthe cluster alongside the client.go and use stabdard way of auth where users send tokens which they got from username and password like in standard web app
