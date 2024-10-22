@@ -193,6 +193,8 @@ Note there is a readme in the sandboxer which is more detailed
 
 # Rollbacks
 
+you can take a `snapshot` of your project and  if you change your project and something goes wrokg you can quickly restore the previous state of the project
+
 # Why choose this tool:
 ## we are both aws and vercel
 - want to rawdog you project using just the kubectl? - you can do it on our platofrm
