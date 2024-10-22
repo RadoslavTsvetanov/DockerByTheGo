@@ -3,11 +3,26 @@
 # Why
 
 - i needed something lightweight since i am monitoring a single file/ process and its subprocesses and threads so i dont need to run full blown edr inside docker
+
 - i needed something compatible with docker, due to the nature of docker to be lightweight, fast and compact most tools dont run splendidly         or at all in docker
+
 - i needed something customazible but easy to write most edrs either provide either too robust (picture 1) way of writing rules or too inflexible since most provide a pseudo boolean language so i dcided its best to use regexing alongside this pseudo boolean dsl which is a widely adpoted dsl (the result i am trying to achieve is more or less the below picture which is the implementation in burp suite which i have enjoyed working with)
+
 <img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.matthewsetter.com%2Fimages%2Fposts%2Fburp-intercept-client-request.png&f=1&nofb=1&ipt=125d6ca56e02a0520fd7ef00281b4f41169d2e9a5e128521fa59d0f46f59459a&ipo=images"/> 
 
 # How
+
+
+# Design choices
+
+## Why rust 
+
+- its low level e.g. i can directly modify registers and is very importnat
+
+- it is argueably the safest language on the low level space which is important when implementing something which we wouldnt want vulns in
+
+- it is a modern language and it has way better developer experience
+
 
 # Tech i took inspiration from
 - burp suite for the custom pseudo boolean lang
