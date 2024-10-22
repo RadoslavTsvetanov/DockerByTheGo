@@ -2,7 +2,7 @@
 - platform where you can easily deploy all kinds of `application`s which work on the base of docker container  
 - to deploy an `application` you create a `project` 
 - in a `project` you can create `application` and choose from a variety of `application` `options`
-- to deploy a  you just have to specify a docker img from the docker repository or  a custom registry but additional set up is required so you will need to do these [steps] (#cuatom-id)
+- to deploy an application  you just have to specify a docker img from the docker repository or  a custom registry but additional set up is required so you will need to do these [steps] (#cuatom-id)
 - some `options` include:
 	- expose -> gives it a publicly accessible url to ssh into or if its some kind of db to expose it to the internet
 	- deplyment_type:
@@ -12,7 +12,7 @@
 - **Volume Management**: Provide persistent storage options that can be attached to containers, enabling stateful services and data persistence.
 - also each `project` dashboard has a `metrics` tab where you can see all kinds of useful info 
 - also if you need two containers to communicate you dont need to expose two containers to internet but instead access them within the same project network 
-- also you can easily `stop` containers or projects and delete them or `suspend` them so that you can easily get them back up while paying only for storage and not for compute  
+- also you can easily `stop` containers or projects anddelete them or `suspend` them so that you can easily get them back up while paying only for storage and not for compute  
 - also the api is exposed publicly for each user e.g. a user can control their resources programatically where he just needs an api key genersted from options which is just the user role token which is in your browser ( this token is different from auth token foe the ebsite, since by default all your user keys are stored in the browser for each role you have signed up with /* more detailed explanation in rbac */)
 - also since a lot of web dev things are redundant you can specify templates in which you configure most settings and leave a few of them blank -> an example where it would be useful is deploying a backend connecting to a db and a backup service accessing the db. Here is an example: (keep in mind there are some globally provided variables like the network which you canalso specify) 
 ```
@@ -126,13 +126,12 @@ Our goal is to simplify the usage of the cloud while at the same tyme not settin
 
 ## Integrated ai helper 
 
-- you can ot out of it 
+- you can opt out of it 
+
 - it is being fed data from your config and so you can ask it questions about your project
 
-
 ## Decalaritive First
-- by def since it is using k8s it is theoretically declarative but we have introduced an abstraction layer above that in whuch your whole project is a template which you can view and export at any time
-- you can opt out of it
+- by def since it is using k8s it is theoretically declarative but we have introduced an abstraction layer above that makes your whole project a template which you can view and export at any time
 
 
 
@@ -230,6 +229,13 @@ Note there is a readme in the sandboxer which is more detailed
   }
 
     ```
+
+
+# Getting started
+## there are 3 ways to get started
+- use our platform with a managed cluster from us (not much set up needed on your behalf)
+- install our docker container on the machine your kubectl is (why not inside the cluster? - since it is still an application it could increase the k8s clustwr resource consumption)
+- inside the cluster (very easy set up but will take somw of the resources of the cluster)
 
 
 # DOCS
