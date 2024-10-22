@@ -77,6 +77,7 @@
 
 ```
 
+
 ## Built in tools:
 
 When setting up the cluster for your happy k8s existence we set up some things for you. Some of the tools and operators are:
@@ -253,7 +254,9 @@ you can take a `snapshot` of your project and  if you change your project and so
 
 
 # How does our platform for the tool work for you paranoid guys that want to know how everything works so we will save you some digging
-- when you are on the main page you will see a page called groups
+
+## Projects and spaces
+- a `project` is a k8s namespace and a `space` is a seperate cluster, hence why you can reference `application`s between projects in the same `space`
 
 
 
