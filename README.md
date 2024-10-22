@@ -239,7 +239,16 @@ you can take a `snapshot` of your project and  if you change your project and so
 - install our docker container on the machine your kubectl is (why not inside the cluster? - since it is still an application it could increase the k8s clustwr resource consumption)
 - inside the cluster (very easy set up but will take somw of the resources of the cluster)
 
+# Forum
 
+## we would like to centralize the place where problems and solutions for our project are so we have a forum with intuitive design like `stackoverflow`
+
+## why use the forum
+
+- you help us make the project better by sending the issues directly to us. Although github issues is the place for bugs its not where all bugs should be (for example buggy frontend) 
+
+- you help us make our ai better, we gather training data for our model from the questions in the forum and it is with the added benefit is
+ that it will be trained better than the normal chatbots since we are using the same open source model but with more carefully picked data
 # DOCS
 
 
