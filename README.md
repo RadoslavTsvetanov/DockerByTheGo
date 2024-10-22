@@ -10,7 +10,7 @@
 		- managed ( it gets restarted and sends you a notification with info about the crash )
 - also you can give `tags` to your `application`s so that you can easily query them 
 - **Volume Management**: Provide persistent storage options that can be attached to containers, enabling stateful services and data persistence.
-- also each `project` dashboard has a `metrics` tab where you can see all kinds of useful info 
+- also each `project` dashboard has a `metrics` tab where you can see all kinds of useful info. The `metrics` for a cluster also expose a public api so that any `application` or `buddy` can push metrics to it (this is achieved by using a combination of kibana and elastic and grafana)
 - also if you need two containers to communicate you dont need to expose two containers to internet but instead access them within the same project network 
 - also you can easily `stop` containers or projects anddelete them or `suspend` them so that you can easily get them back up while paying only for storage and not for compute  
 - also the api is exposed publicly for each user e.g. a user can control their resources programatically where he just needs an api key genersted from options which is just the user role token which is in your browser ( this token is different from auth token foe the ebsite, since by default all your user keys are stored in the browser for each role you have signed up with /* more detailed explanation in rbac */)
