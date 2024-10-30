@@ -3,4 +3,5 @@ node_modules
 target
 /target
 env.tf
-``
+.terraform
+/.terraform
