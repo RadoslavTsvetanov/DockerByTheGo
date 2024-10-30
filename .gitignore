@@ -5,3 +5,6 @@ target
 env.tf
 .terraform
 /.terraform
+
+.exe
+.out
