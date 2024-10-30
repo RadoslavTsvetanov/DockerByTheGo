@@ -26,16 +26,17 @@ type TemplateMetadata struct {
 	Author      string // references the account of the creator
 	Version     string
 	Description string
+	Name        string // name of the template
 }
 
 // TemplateContainer struct with updated enum fields for exposure and mode
 type TemplateContainer struct {
-	ImageName string            `json:"imageName"` // Fixed closing backtick
-	Name      string            `json:"name"`
-	Exposure  Exposure          `json:"exposure"`  // Fixed closing backtick
+	ImageName string            `json:"imageName"`
+	Name      string            `json:"name"` // name of the container which will be deployed from the template
+	Exposure  Exposure          `json:"exposure"`
 	Env       map[string]string `json:"env"`
 	Mode      Mode              `json:"mode"`
 	Metadata  TemplateMetadata  `json:"metadata"`
-	Labels    map[string]string `json:"labels"`    // Added missing JSON tag
+	Labels    map[string]string `json:"labels"`
 	Port      int               `json:"port"`
 }

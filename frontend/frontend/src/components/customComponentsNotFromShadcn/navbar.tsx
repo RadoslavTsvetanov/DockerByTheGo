@@ -59,7 +59,7 @@ export const SubPager: React.FC<{ subviews: subview[] }> = ({ subviews }) => {
                 setSelectedElement={setSelectedElement}
                 selectedElement={selectedElement}
                 items={subviews.map(subview => subview.name)}
-                />
+            />
                 {subviews[selectedElement]?.elementToDisplay ||<div> undefined </div>}
         </div>
         <div>

@@ -19,7 +19,7 @@ func createProjectRole(permissionsSet []rbacv1.PolicyRule, namespace string, rol
 		},
 		Secrets: []v1.ObjectReference{
 			{
-				Name: "test-secret",
+				Name: "test-secret", //TODO: potential bug since eveything uses the same secret, make better logic
 			},
 		},
 	}
@@ -100,3 +100,6 @@ func createAdminRole(name, projectName string) error {
 
 	return nil
 }
+
+
+// ! Logic for how requests will be sent to the cluster
