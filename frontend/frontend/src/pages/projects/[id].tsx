@@ -4,6 +4,8 @@ import { NavBarItem, Navbar, SubPager, subview } from "~/components/customCompon
 import { MiniLoading } from "~/components/customComponentsNotFromShadcn/miniLoading"
 import { Alertn } from "~/components/customComponentsNotFromShadcn/alert"
 import { Alert } from "~/types/alert"
+import { CommandLine, CommandLineWrapper } from "~/components/customComponentsNotFromShadcn/commandLine"
+import { Canvas } from "~/components/customComponentsNotFromShadcn/projectCanvas"
 
 
 
@@ -75,6 +77,7 @@ const Monitoring: React.FC<{ global: pageProps }> = ({ global }) => {
 
 
 const Project: React.FC<pageProps> = ({ ctx }) => {
+
   const subPagerElements: subview[] = [
       {
           elementToDisplay: (props) => <Graph {...props} ctx={ctx} />,
@@ -89,7 +92,7 @@ const Project: React.FC<pageProps> = ({ ctx }) => {
           name: "Settings"
       },
       {
-          elementToDisplay: () => {return <Alerts global={{ctx}}/>},
+          elementToDisplay: () =>  <Alerts global={{ctx}}/>,
           name: "Alerts" 
       },
       {
@@ -99,11 +102,16 @@ const Project: React.FC<pageProps> = ({ ctx }) => {
       {
           elementToDisplay: () => <Monitoring global={{ctx}} />,
           name: "Monitoring"
+      },
+      {
+        elementToDisplay: () => <Canvas global={{ ctx }} />,
+        name: "View"
       }
   ];
 
   return (
     <div>
+      <CommandLineWrapper />
       <h1>Project Page</h1>
       <button onClick={() => { ctx.setError("Error occurred") }}>Throw Error</button>
           <SubPager

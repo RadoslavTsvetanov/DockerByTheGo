@@ -60,12 +60,11 @@ export const SubPager: React.FC<{ subviews: subview[] }> = ({ subviews }) => {
                 selectedElement={selectedElement}
                 items={subviews.map(subview => subview.name)}
             />
-                {subviews[selectedElement]?.elementToDisplay ||<div> undefined </div>}
         </div>
         <div>
       {subviews.map((Subview, index) => (
         <div key={index} onClick={() => setSelectedElement(index)}><Subview.elementToDisplay  /></div>
-      )).filter(subview => subview.key === selectedElement.toString())[0]} // refactor 
+      )).filter(subview => subview.key === selectedElement.toString())[0]} {/* refactor */} 
     </div>
         </div>
   );
