@@ -188,6 +188,9 @@ Note there is a readme in the sandboxer which is more detailed
 ## Some diagrams to visualize better the architecture
 - the alert system: `https://excalidraw.com/#json=TMBT6N24qs6WeQIVBWR2f,iMq1KeAnZfNalI6IxXL3og`
 
+# History
+- every action you perform against the cluster is saved in a history (for now only all helper actions are saved e.g. if you modify the cluster usibng kubectl it wont be displayed)
+
 
 # Buddies
 - a buddy is an application which extends your current one, fo example dashboard logging etc ..., they can be set both at the `service` level or at the `deployment` level since behind the scenes we as running k8s. They are kinda like coolify services
