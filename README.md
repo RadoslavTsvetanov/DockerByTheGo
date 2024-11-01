@@ -190,6 +190,7 @@ Note there is a readme in the sandboxer which is more detailed
 
 # History
 - every action you perform against the cluster is saved in a history (for now only all helper actions are saved e.g. if you modify the cluster usibng kubectl it wont be displayed)
+- audit logs but better (we just dispkay audit logs better)
 
 
 # Buddies
