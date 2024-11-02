@@ -4,7 +4,7 @@ import { type AppType } from "next/app";
 import "~/styles/globals.css";
 import { Theme } from "@radix-ui/themes";
 import ClipLoader from "react-spinners/BeatLoader";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ErrorComponent } from "~/components/customComponentsNotFromShadcn/error";
 import { ctx } from "~/utils/ctx";
 type BaseCtx = typeof ctx;

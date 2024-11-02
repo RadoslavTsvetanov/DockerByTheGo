@@ -6,6 +6,7 @@ import { Alertn } from "~/components/customComponentsNotFromShadcn/alert"
 import { Alert } from "~/types/alert"
 import { CommandLine, CommandLineWrapper } from "~/components/customComponentsNotFromShadcn/commandLine"
 import { Canvas } from "~/components/customComponentsNotFromShadcn/projectCanvas"
+import { ChatWrapper } from "~/components/customComponentsNotFromShadcn/chatCompoenent"
 
 
 
@@ -75,6 +76,72 @@ const Monitoring: React.FC<{ global: pageProps }> = ({ global }) => {
     );
   };
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
+namespace helperApiChanges{
+  enum Resources{
+    Project = "project",
+    Container = "container",
+    Space = "space",
+  }
+
+  enum Actions {
+    Create,
+    Delete,
+    Update
+  } 
+  
+  type ChangeToSpace = {
+    resource: Resources,
+    action: Actions,
+    payload?: object
+  }
+
+
+  const Change: React.FC<{data: ChangeToSpace}> = ({data }) => {
+    return (
+      <div>
+        Action: {data.action}
+        Resource: {data.resource}
+        {data.payload ? <div>{data.payload.toString()}</div> : <div></div>}
+      
+      </div>
+    );
+  }
+  
+  export const ApiHelperChanges = ({ }) => {
+    const changes: ChangeToSpace[] = [];//simulate fwtching chnages
+    
+    return (
+      <div>
+        {changes.map((change) => {
+          return <Change key={change.resource} data={change} />
+        })}
+      </div>
+    )
+  }
+}
+
+const History: React.FC<{ global: pageProps }> = ({
+  global
+}) => {
+  const subviwes: subview[] = [
+    {
+      name: "audit logs", 
+      elementToDisplay: () => <div>Audit logs</div>
+    },
+    {
+      name: "helper history", 
+      elementToDisplay: () => <helperApiChanges.ApiHelperChanges/>
+    }
+  ]
+
+  return (
+    <div>
+      <h1>History Page</h1>
+      <SubPager subviews={subviwes}/>
+    </div>
+  );
+}
 
 const Project: React.FC<pageProps> = ({ ctx }) => {
 
@@ -86,6 +153,10 @@ const Project: React.FC<pageProps> = ({ ctx }) => {
       {
           elementToDisplay: () => <div>Project Details</div>,
           name: "ProjectDetails"
+      },
+      {
+        elementToDisplay: () => <History global={{ctx}}/>,
+        name: "History"
       },
       {
           elementToDisplay: () => <div>Settings</div>,
@@ -105,13 +176,18 @@ const Project: React.FC<pageProps> = ({ ctx }) => {
       },
       {
         elementToDisplay: () => <Canvas global={{ ctx }} />,
-        name: "View"
+        name: "Project view"
+      },
+      {
+        elementToDisplay: () => <div>export as a template</div>,
+        name: "templateViewTemplate"
       }
   ];
 
   return (
     <div>
       <CommandLineWrapper />
+      <ChatWrapper/>
       <h1>Project Page</h1>
       <button onClick={() => { ctx.setError("Error occurred") }}>Throw Error</button>
           <SubPager

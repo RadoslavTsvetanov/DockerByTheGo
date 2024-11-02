@@ -1,15 +1,15 @@
-import { actionsManager, CreateAction } from "./actionManager";
+import { actionsManager, CreateAction } from "./entities/actionManager";
 import {
-  CanvasObject,
   Rectangle,
   TextObject,
   Circle,
   Select,
-} from "./canvasObjects";
-import { Snapshot, UndoRedo } from "./undoRedoTree";
+} from "./compoents/canvasObjects";
+import { Snapshot, UndoRedo } from "./entities/undoRedoTree";
 import { Cursor, CursorType, CursorState } from "./cursor";
 import { generateId } from "./utils/idGenerator";
 import { SelectedElementsManager,CanvasElementsManager } from "./objectsManager";
+import { CanvasObject } from "./compoents/baseCompoents";
 
 const selectedObjectsManager = new SelectedElementsManager();
 const objectsManager = new CanvasElementsManager();
@@ -150,6 +150,7 @@ export class CanvasSingleton {
   public draw(): void {
     this.clearCanvas();
     for (const obj of this.objectManager.getAllObjects()) {
+      
       obj.draw(this.ctx);
     }
   }

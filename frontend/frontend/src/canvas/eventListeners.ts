@@ -2,9 +2,11 @@
 export class CurrentlyPressedKeys{ // potenitally redice to just an object, also ask if its better to just use an object or do it in a class like this
     private static instance: CurrentlyPressedKeys
     pressedKeys:  Record<string, boolean>= { }; 
+    
     private constructor() {
         return 
     }
+ 
     public static getInstance(): CurrentlyPressedKeys {
         if (!CurrentlyPressedKeys.instance) {
             CurrentlyPressedKeys.instance = new CurrentlyPressedKeys();
@@ -55,7 +57,3 @@ const CurrentlyPressedKeys = {
 or just create an instance of the above class and only export the instance
 
 */
-
-
-
-export const tttt = 4; // TODO: remove later

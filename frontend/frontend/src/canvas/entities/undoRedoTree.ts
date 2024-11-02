@@ -1,7 +1,7 @@
 import {
   SelectedElementsManager,
   CanvasElementsManager,
-} from "./objectsManager.js";
+} from "../objectsManager.js";
 
 export class Snapshot {
   private selectedThingsManager: SelectedElementsManager;

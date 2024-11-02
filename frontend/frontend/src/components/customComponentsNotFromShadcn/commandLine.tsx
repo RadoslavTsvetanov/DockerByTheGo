@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { tttt, CurrentlyPressedKeys } from "~/canvas/eventListeners";
 import { KeyCodes } from "~/canvas/utils/keycodes";
 
-export const CommandLineWrapper: React.FC = () => {
+export const CommandLineWrapper: React.FC = () => {// potentially make a hider componnt which accepts a component and hides it ad shows it since it will be a recuring pattern 
   const [isCommandLineOpen, setIsCoomandLineOpen] = useState(false); // TODO: make it a globally triggered component with a global key listener
   const currentlyPressedKeys = CurrentlyPressedKeys.getInstance();
 
@@ -13,7 +13,7 @@ export const CommandLineWrapper: React.FC = () => {
 
         if (currentlyPressedKeys.checkForKeyPresss([KeyCodes.Control, "1"])) { //! be careful when adding combinations which are also browser shortcuts since they move focus so it does not remove them after leading to undefined behaviour so preferably check only for combinations which are not already used by chrome
             console.log("jijiffff")
-            setIsCoomandLineOpen(true)
+            setIsCoomandLineOpen(!isCommandLineOpen)
         }
 
         if (currentlyPressedKeys.checkForKeyPresss(["b"])) {
@@ -32,7 +32,7 @@ export const CommandLineWrapper: React.FC = () => {
     return () => {
         console.log("");
     };
-  }, []);
+  });
 
   return (
     <div className="command-line-wrapper">
