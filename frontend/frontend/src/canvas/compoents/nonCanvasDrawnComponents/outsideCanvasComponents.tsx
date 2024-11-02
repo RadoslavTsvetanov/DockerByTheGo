@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { actionsManager } from "../../entities/actionManager";
-import { Cursor, CursorType } from "../../cursor";
+import { Cursor, CursorType } from "../../entities/cursor";
 import { undoRedoStack } from "../../canvas";
 
 function setCursorType(type: CursorType) {

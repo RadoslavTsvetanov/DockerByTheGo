@@ -1,4 +1,4 @@
-import { Cursor, CursorState, CursorType } from ".././cursor";
+import { Cursor, CursorState, CursorType } from "../entities/cursor";
 import { generateId } from ".././utils/idGenerator";
 import { RectBase, CanvasObject } from "./baseCompoents";
 
@@ -158,7 +158,10 @@ export class Circle extends CanvasObject {
     ctx.closePath();
   }
 
-
+  highlight(ctx: CanvasRenderingContext2D): void {
+      ctx.strokeStyle = "red";
+    ctx.lineWidth = 4;
+  }
 
 
   
@@ -168,7 +171,7 @@ export class Circle extends CanvasObject {
       this.x,
       this.y,
       this.radius,
-this.id,
+      this.id,
       this.bgColor,
       this.boundariesColor
     );

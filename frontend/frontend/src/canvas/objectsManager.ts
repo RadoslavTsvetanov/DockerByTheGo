@@ -17,6 +17,14 @@ abstract class ObjectManager<T extends CanvasObject> {
     this.objects[object.id] = object;
   }
 
+  setObjects(objects: ManagerObjects): void {
+    this.objects = {...objects}
+  }
+
+  clearAllObjects() {
+    this.objects = {};
+  }
+
   getAllObjects(): T[] {
     const objects: T[] = [];
     for (const value of Object.values(this.objects)) {

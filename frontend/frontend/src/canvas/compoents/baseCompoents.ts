@@ -1,7 +1,6 @@
-import { Cursor, CursorState, CursorType } from ".././cursor";
+import { Cursor, CursorState, CursorType } from "../entities/cursor";
 import { generateId } from ".././utils/idGenerator";
-import { zoom } from "../scale";
-
+import { zoom } from "../entities/scale";
 const CONSTS = {
   HIGHLIT_COLOR:"red"
 }
@@ -100,12 +99,16 @@ export abstract class RectBase extends CanvasObject {
   }
 
   highlight(ctx: CanvasRenderingContext2D): void {
-    ctx.fillStyle = CONSTS.HIGHLIT_COLOR;
-    ctx.fillRect(
+    ctx.strokeStyle = CONSTS.HIGHLIT_COLOR; // Set the color for the outline
+    ctx.lineWidth = 4; // Set the outline width
+
+    // Draw the outline around the box
+    ctx.strokeRect(
       this.rect.x - 2,
       this.rect.y - 2,
       this.rect.width + 4,
       this.rect.height + 4
-    )
+    );
   }
+
 }

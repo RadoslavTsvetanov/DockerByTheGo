@@ -1,3 +1,4 @@
+import { zoom } from './entities/scale';
 import { actionsManager, CreateAction } from "./entities/actionManager";
 import {
   Rectangle,
@@ -6,10 +7,13 @@ import {
   Select,
 } from "./compoents/canvasObjects";
 import { Snapshot, UndoRedo } from "./entities/undoRedoTree";
-import { Cursor, CursorType, CursorState } from "./cursor";
+import { Cursor, CursorType, CursorState } from "./entities/cursor";
 import { generateId } from "./utils/idGenerator";
 import { SelectedElementsManager,CanvasElementsManager } from "./objectsManager";
 import { CanvasObject } from "./compoents/baseCompoents";
+
+
+
 
 const selectedObjectsManager = new SelectedElementsManager();
 const objectsManager = new CanvasElementsManager();
@@ -74,7 +78,7 @@ export class CanvasSingleton {
     });
 
     this.canvas.addEventListener("mouseup", () => {
-      this.selectedObjects.objects = [];
+      this.selectedObjects.clearAllObjects()
       Cursor.getInstance().setCursor(CursorState.Up);
       this.lastPosition = null;
       this.currentObject = null;
@@ -114,11 +118,11 @@ export class CanvasSingleton {
     const { x, y } = this.lastPosition!;
     switch (cursorType) {
       case CursorType.Rectangle:
-        return new Rectangle(x, y, 0, 0, generateId(), "transparent", "black");
+        return new Rectangle(x, y, 0, 0, generateId(), "transparent", "yellow");
       case CursorType.Circle:
-        return new Circle(x, y, 0, generateId(), "transparent", "black");
+        return new Circle(x, y, 0, generateId(), "transparent", "yellow");
       case CursorType.TextArea:
-        return new TextObject(x, y, 0, 0, generateId(), "hi", "black", "black");
+        return new TextObject(x, y, 0, 0, generateId(), "hi", "yellow", "yellow");
       case CursorType.Select:
         return new Select(x, y, 0, 0);
       default:
@@ -149,10 +153,21 @@ export class CanvasSingleton {
 
   public draw(): void {
     this.clearCanvas();
+    const scale = zoom.getZoomLevel()
+
     for (const obj of this.objectManager.getAllObjects()) {
       
       obj.draw(this.ctx);
     }
+    
+    for (const obj of this.selectedObjects.getAllObjects()) {
+      try {
+        obj.highlight(this.ctx)
+      } catch (e) { 
+
+      }
+      
+      }
   }
 
   public checkCollisions(): void {

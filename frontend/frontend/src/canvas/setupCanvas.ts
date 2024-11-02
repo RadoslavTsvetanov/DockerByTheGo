@@ -2,8 +2,8 @@ import { MutableRefObject } from "react";
 import { CanvasSingleton } from "./canvas";
 import { CurrentlyPressedKeys } from "./eventListeners";
 import { KeyCodes } from "./utils/keycodes";
-import { zoom } from "./scale";
 import { zoomStep } from "~/components/customComponentsNotFromShadcn/projectCanvas";
+import { zoom } from "./entities/scale";
 function setUpEventListeners() {
     
 
