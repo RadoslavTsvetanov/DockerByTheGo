@@ -1,4 +1,4 @@
-# Overview of the project
+f# Overview of the project
 - platform where you can easily deploy all kinds of `application`s which work on the base of docker container  
 - to deploy an `application` you create a `project` 
 - in a `project` you can create `application` and choose from a variety of `application` `options`
@@ -9,11 +9,13 @@
 		- self managed (if it stops it stops)
 		- managed ( it gets restarted and sends you a notification with info about the crash )
 - also you can give `tags` to your `application`s so that you can easily query them 
-- **Volume Management**: Provide persistent storage options that can be attached to containers, enabling stateful services and data persistence.
+- **Volume Management**: Provide persistent storage options that can be attached to containers, enabling stateful services and data persistence. ( abstraction over persistent volume claims)
 - also each `project` dashboard has a `metrics` tab where you can see all kinds of useful info. The `metrics` for a cluster also expose a public api so that any `application` or `buddy` can push metrics to it (this is achieved by using a combination of kibana and elastic and grafana)
 - also if you need two containers to communicate you dont need to expose two containers to internet but instead access them within the same project network 
-- also you can easily `stop` containers or projects anddelete them or `suspend` them so that you can easily get them back up while paying only for storage and not for compute  
+- also you can easily `stop` containers or projects and delete them or `suspend` them so that you can easily get them back up while paying only for storage and not for compute  
 - also the api is exposed publicly for each user e.g. a user can control their resources programatically where he just needs an api key genersted from options which is just the user role token which is in your browser ( this token is different from auth token foe the ebsite, since by default all your user keys are stored in the browser for each role you have signed up with /* more detailed explanation in rbac */)
+
+# Templates 
 - also since a lot of web dev things are redundant (for example spining up a postgre db) you can specify or browse templates in which you configure most settings and leave a few of them blank -> an example where it would be useful is deploying a backend connecting to a db and a backup service accessing the db. Here is an example: (keep in mind there are some globally provided variables like the network which you canalso specify) 
 ```
   {
@@ -78,7 +80,7 @@
 ```
 
 
-## Built in tools:
+## Built in tools when using our cloud solution (note you can install them yourself too but here they are preconfigured):
 
 When setting up the cluster for your happy k8s existence we set up some things for you. Some of the tools and operators are:
 
@@ -110,7 +112,7 @@ these pods have resource limitations which unless you have something very comple
 
 
 
-# Container scout
+## Container scout
 - it goes through all your projects and checks if any services of yours are vulnerable to known cve\`s, exploits, etc ... and if it is found it fires an `alert` 
 
 
@@ -123,9 +125,20 @@ Our goal is to simplify the usage of the cloud while at the same tyme not settin
 - soft: if your project happens to exceed the limit you start paying as you go according to a standard quota ( or upgrade to the next plan i will decide ), you will ofc recieve an alert but no service will be killed, unless you upgrade your plan when you go backto the quota you will again be charged according to the plan you are on 
 
 
+## History
+- every action you perform against the cluster is saved in a history (for now only all helper actions are saved e.g. if you modify the cluster usibng kubectl it wont be displayed)
+- audit logs but better (we just dispkay audit logs better)
 
 
-## Integrated ai helper 
+## Buddies
+- a buddy is an application which extends your current one, fo example dashboard logging etc ..., they can be set both at the `service` level or at the `deployment` level since behind the scenes we as running k8s. They are kinda like coolify services
+
+## Rollbacks
+
+you can take a `snapshot` of your project and  if you change your project and something goes wrokg you can quickly restore the previous state of the project
+
+
+## Integrated ai helper (propritieary, only availab;e on the platoform) 
 
 - you can opt out of it 
 
@@ -145,15 +158,6 @@ Our goal is to simplify the usage of the cloud while at the same tyme not settin
 ## Custom status codes
 We believe in giving info whenever we do something which you did not request explicitely ( for example killing a service since it exceeded the quota) so we use status codes in our messages, here you can find info abiut them:
 - 707: quota exceeded, this indicates that the reason for the performed action is that the service has exceeded the memeory qoutas, scenarios where you will encounter this are but not all -> killing, increase quota for the resource
-
-
-
-
-
-# Templates 
-
-
-
 
 # Design choices
 
@@ -187,18 +191,6 @@ Note there is a readme in the sandboxer which is more detailed
 
 ## Some diagrams to visualize better the architecture
 - the alert system: `https://excalidraw.com/#json=TMBT6N24qs6WeQIVBWR2f,iMq1KeAnZfNalI6IxXL3og`
-
-# History
-- every action you perform against the cluster is saved in a history (for now only all helper actions are saved e.g. if you modify the cluster usibng kubectl it wont be displayed)
-- audit logs but better (we just dispkay audit logs better)
-
-
-# Buddies
-- a buddy is an application which extends your current one, fo example dashboard logging etc ..., they can be set both at the `service` level or at the `deployment` level since behind the scenes we as running k8s. They are kinda like coolify services
-
-# Rollbacks
-
-you can take a `snapshot` of your project and  if you change your project and something goes wrokg you can quickly restore the previous state of the project
 
 # Why choose this tool:
 ## we are both aws and vercel
@@ -255,6 +247,53 @@ you can take a `snapshot` of your project and  if you change your project and so
 - you help us make our ai better, we gather training data for our model from the questions in the forum and it is with the added benefit is
  that it will be trained better than the normal chatbots since we are using the same open source model but with more carefully picked data
 # DOCS
+
+## Getting started
+
+### Installation
+
+The installation happens by deploying a pod (or deployment) insde your cluster, here is an example pod which installs the tool 
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+      - name: my-app-container
+        image: nginx  # Replace with your app image
+        ports:
+        - containerPort: 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-app-service
+spec:
+  selector:
+    app: my-app
+  type: NodePort  # Or LoadBalancer, if on cloud provider
+  ports:
+  - port: 80
+    targetPort: 80
+    nodePort: 30080  # NodePort range is 30000-32767 # to access it from outside the cluster
+
+```
+
+Also for your ease of use the is a publically exposed api so that the community can develop frontend for the tool but we also made our own which is again a docker img amd you just need to configure a connection url which will use to talkk with the tool server. It can really be run everywhere a docker continaer can be run (or if you have npm installed) so you can decide of you want to deplopy it in the cluster or in a remote machine.
+
+
+
 
 
 # How does our platform for the tool work for you paranoid guys that want to know how everything works so we will save you some digging
