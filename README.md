@@ -256,6 +256,53 @@ you can take a `snapshot` of your project and  if you change your project and so
  that it will be trained better than the normal chatbots since we are using the same open source model but with more carefully picked data
 # DOCS
 
+## Getting started
+
+### Installation
+
+The installation happens by deploying a pod (or deployment) insde your cluster, here is an example pod which installs the tool 
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+      - name: my-app-container
+        image: nginx  # Replace with your app image
+        ports:
+        - containerPort: 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-app-service
+spec:
+  selector:
+    app: my-app
+  type: NodePort  # Or LoadBalancer, if on cloud provider
+  ports:
+  - port: 80
+    targetPort: 80
+    nodePort: 30080  # NodePort range is 30000-32767 # to access it from outside the cluster
+
+```
+
+Also for your ease of use the is a publically exposed api so that the community can develop frontend for the tool but we also made our own which is again a docker img amd you just need to configure a connection url which will use to talkk with the tool server. It can really be run everywhere a docker continaer can be run (or if you have npm installed) so you can decide of you want to deplopy it in the cluster or in a remote machine.
+
+
+
+
 
 # How does our platform for the tool work for you paranoid guys that want to know how everything works so we will save you some digging
 
