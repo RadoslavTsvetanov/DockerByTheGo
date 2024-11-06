@@ -11,6 +11,8 @@ import { Cursor, CursorType, CursorState } from "./entities/cursor";
 import { generateId } from "./utils/idGenerator";
 import { SelectedElementsManager,CanvasElementsManager } from "./objectsManager";
 import { CanvasObject } from "./compoents/baseCompoents";
+import { serializer } from './serializer';
+import { deserialize } from 'v8';
 
 
 
@@ -32,7 +34,7 @@ export class CanvasSingleton {
   public selectedObjects = selectedObjectsManager;
   private currentObject: CanvasObject | null = null;
   private undoRedo = undoRedoStack;
-
+  private state = ""
   private constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas; 
     this.ctx = this.canvas.getContext("2d")!;
@@ -151,7 +153,19 @@ export class CanvasSingleton {
     }
   }
 
+  deleteSelected() {
+    this.selectedObjects.getAllObjects().forEach((obj => {
+      this.objectManager.clearObject(obj.id);
+    }))
+
+    this.selectedObjects.getAllObjects().forEach(obj => {
+      this.selectedObjects.clearObject(obj.id)
+    })
+  }
+
   public draw(): void {
+    this.objectManager.setObjects(serializer.deseriazlize(this.state))
+    console.log("jij")
     this.clearCanvas();
     const scale = zoom.getZoomLevel()
 
@@ -168,7 +182,11 @@ export class CanvasSingleton {
       }
       
       }
+      
+    this.state = serializer.serialize(this.objectManager)
   }
+
+  
 
   public checkCollisions(): void {
     const cursor = Cursor.getInstance();

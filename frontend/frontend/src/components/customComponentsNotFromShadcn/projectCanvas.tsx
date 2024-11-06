@@ -14,7 +14,7 @@ export const Canvas: React.FC<{ global: pageProps }> = () => {
 
     setUpCanvas(canvasRef.current, canvasInstanceRef)
     return () => {
-      canvasInstanceRef.current = null; 
+      canvasInstanceRef.current = null;
     };
   
   }, []);
@@ -28,7 +28,7 @@ export const Canvas: React.FC<{ global: pageProps }> = () => {
   
   
   
-  
+ 
   return (
     <div>
 

@@ -1,9 +1,0 @@
-curl -X POST http://localhost:3000/alert \
--H "Content-Type: application/json"\
--d '{
-  "payload": {
-    "handlerId":1,
-    "body": "huiiuh",
-    "stream": false
-  }
-}'

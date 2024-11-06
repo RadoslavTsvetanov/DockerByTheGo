@@ -60,6 +60,7 @@ export abstract class CanvasObject implements ICanvasObject {
 }
 
 export abstract class RectBase extends CanvasObject {
+  
   public rect: { x: number; y: number; width: number; height: number };
 
   constructor(
@@ -106,9 +107,8 @@ export abstract class RectBase extends CanvasObject {
     ctx.strokeRect(
       this.rect.x - 2,
       this.rect.y - 2,
-      this.rect.width + 4,
-      this.rect.height + 4
+      (this.rect.width + 4) * zoom.getZoomLevel(),
+      (this.rect.height + 4) * zoom.getZoomLevel()
     );
   }
-
 }

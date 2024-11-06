@@ -30,6 +30,10 @@ class Zoom{
     getZoomLevel() {
         return this.value;
     }
+
+    resetZoomLevel() { 
+        this.value = 1; 
+    }
 }
 
 export const zoom = new Zoom(); // make it a singleton without much hassle 

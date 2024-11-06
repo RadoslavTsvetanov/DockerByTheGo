@@ -6,7 +6,7 @@ import (
 	. "k8s/templates"
 )
 
-var namespace = "ooo"
+var namespace = "alerts-workloads-manager-system"
 
 func testApplyingTemplateContainerWithNormalValues() {
 
@@ -148,7 +148,7 @@ func main() {
 	fmt.Print("")
 
 	GetServicesFromOutsideTheCluster("ooo")
-
+testApplyingTemplateContainerWithNormalValues()
 	// testingSpinningUpMiniInfra()
 
 }

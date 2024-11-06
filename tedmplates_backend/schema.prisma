@@ -1,6 +1,0 @@
-
-
-model Template {
-    id @unique
-    link_to_s3_blob String// saving the json in s3 its less ans also it can be easily be compressed and decompressed
-}

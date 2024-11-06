@@ -26,4 +26,5 @@ export class Cookie {
 
 export const cookies = {
   auth: new Cookie("auth"),
+  backendUrl: new Cookie("backendUrl"),
 };

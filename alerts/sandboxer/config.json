@@ -1,0 +1,15 @@
+{
+    "general_rules": {
+      "hui":"not_allow"
+    },
+    "open": {
+        "/passwd": "not_allow",   
+        "./.*": "allow"         
+    },
+    "write": {
+        ".*": "not_allow",               
+        "koko.txt": "allow",
+        "oooo": "not_allow"
+
+    }
+}

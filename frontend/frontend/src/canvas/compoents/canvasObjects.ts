@@ -164,8 +164,6 @@ export class Circle extends CanvasObject {
   }
 
 
-  
-
   copy(): Circle {
     return new Circle(
       this.x,
@@ -191,5 +189,33 @@ export class Select extends Rectangle {
       this.rect.width,
       this.rect.height
     );
+  }
+}
+
+
+
+
+class Line extends Rectangle { 
+  constructor(startingPoint: CanvasObject /*keep a reference to the object the line is attached to */, endingPoint: CanvasObject) { 
+    super(startingPoint.geometricProperties.x, endingPoint.geometricProperties.y,Math.abs(startingPoint.geometricProperties.x-endingPoint.geometricProperties.x),Math.abs(startingPoint.geometricProperties.y-endingPoint.geometricProperties.y),generateId(),"white","red")
+  }
+
+
+
+  draw(ctx: CanvasRenderingContext2D) {
+    super.draw(ctx);
+  }
+}
+
+class Arrow extends Line {
+  constructor() {
+    super(new Circle(0,0,5,generateId(),"white","red"), new Circle(0,0,5,generateId(),"white","red"));
+  }
+
+
+
+  draw(ctx: CanvasRenderingContext2D) { 
+    super.draw(ctx);
+    
   }
 }
