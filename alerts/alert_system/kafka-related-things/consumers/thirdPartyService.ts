@@ -1,10 +1,10 @@
-// this service also consumes the kafka stream but is not doing workload related things, for example collecting user alerts for maliicious inspection or logging
+// this service also consumes the kafka stream but is not doing workload related things, for example collecting user alerts for maliicious inspection or logging or saving data to an apache spark instance 
 
 
 import { type EachMessagePayload } from 'kafkajs';
-import { setUpKafkaConsumer } from './clientUtils';
+import { setUpKafkaConsumer } from './utils/consumerUtils';
 import { Kafka, type Consumer } from 'kafkajs';
-import { ENV } from './env';
+import { ENV } from '../env';
 
 
 const kafka = new Kafka({

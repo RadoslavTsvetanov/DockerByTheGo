@@ -20,5 +20,11 @@
     "grpc-tools": "^1.12.4",
     "kafkajs": "^2.2.4",
     "ts-proto": "^2.2.3"
+  },
+  "scripts": {
+    "build": "tsc",
+    "run_producer": "bun run ./producer/producer.ts",
+    "run_main_consumer": "bun run ./consumers/mainHandler.ts",
+    "run_side_consumer": "bun run ./consumers/thirdPartyService.ts"
   }
 }

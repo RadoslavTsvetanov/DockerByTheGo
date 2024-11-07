@@ -5,7 +5,27 @@ import (
 	"net/http"
 )
 
+
+type  workloadInfo struct{ // dont know the whole strcuture so i will abstract it behind a strcut
+
+}
+
+func fetch_workload_info() (workloadInfo, error) {
+	return workloadInfo{},nil
+}
+
+
+func runWorkload(workloadInfo *workloadInfo){
+
+}
 func newHandler(w http.ResponseWriter, r *http.Request) {
+	info, err := fetch_workload_info();
+	if err!= nil {
+        http.Error(w, "Failed to fetch workload info", http.StatusInternalServerError)
+        return
+    }
+	runWorkload(&info)
+	
 	fmt.Fprintf(w, "This is the /new endpoint!")
 }
 

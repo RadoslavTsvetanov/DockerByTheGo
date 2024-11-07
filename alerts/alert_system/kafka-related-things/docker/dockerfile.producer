@@ -1,0 +1,6 @@
+FROM kafka-base
+
+COPY . .
+
+# Override the command to run a specific script
+ENTRYPOINT ["bun", "run", "run_producer"]

@@ -1,14 +1,16 @@
-import { Kafka,type Producer } from "kafkajs";
-import type { alertMessage } from "./messageHandler";
-import { ENV } from "./env";
+import { type alertMessage } from './../consumers/utils/messageHandler';
+
+import { Kafka, type Producer } from "kafkajs";
+import { ENV } from "../env";
 import  express, { response } from "express";
 import bodyParser from "body-parser";
-import { YourServiceClient, WorkloadRequest, WorkloadResponse } from "./protos/workloadApi";
+import { YourServiceClient, WorkloadRequest, WorkloadResponse } from "../protos/workloadApi";
 import { ChannelCredentials, type ServiceError } from "@grpc/grpc-js";
 import { error } from "console";
 import { exit } from "process";
-const app = express();
 
+
+const app = express();
 app.use(bodyParser.json());
 
 const kafka = new Kafka({
@@ -79,11 +81,13 @@ example req
 */
 
 
-app.post("/alert", async (req, res) => {
+app.post("/alerts/new", async (req: express.Request<{}, { payload: {handlerId: number, content: string }}>, res: express.Response) => {
   console.log(req.body.payload)
-  await sendAlert(req.body.payload)
+  const alertRes = await sendAlert(req.body.payload)
 
-  res.status(200).json({});
+  res.status(200).json({
+   alertRes 
+  });
 
 })
 

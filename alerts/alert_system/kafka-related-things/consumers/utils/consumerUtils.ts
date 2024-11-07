@@ -1,4 +1,4 @@
-import { handleMessage } from './messageHandler';
+import { handleMessage } from "./messageHandler";
 import type { Consumer, EachMessagePayload, Kafka } from "kafkajs";
 
 const messageHandler = async (

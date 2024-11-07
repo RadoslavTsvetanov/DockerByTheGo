@@ -49,8 +49,18 @@ type DeploymentReconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.19.0/pkg/reconcile
 
 func (r *DeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	// Fetch all Deployments with label "alert-workload"
-	deploymentList := &appsv1.DeploymentList{}
+	
+	deploymentList := &appsv1.DeploymentList{} // TODO: instead make it with pods but figure out how to scale down pods along with the deployment, one strategy is to attach a custom resource to the deployment which also indicated how much memory each pod can have and so you just chage it to a lower value and kill all the pods 
+	/*
+	for example instead of using the normal resource limiters, make a keeper object which works like tht
+	selector: <deployment to attach to>
+	
+	limiters: 
+		memory: 
+		cpu:
+	*/
+	//like that you can get deployment of least signifance and reduce its usage even or suspend it to free resources and  
+	// like that when 
 	labelSelector := client.MatchingLabels{"alert-workload": "true"}
 	err := r.Client.List(ctx, deploymentList, labelSelector)
 	
