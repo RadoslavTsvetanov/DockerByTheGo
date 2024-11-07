@@ -6,6 +6,7 @@ export default function Home() {
   const [isBackendUrlSet, setIsBackendUrlSet] = useState(false)
   const [inputForBackendUrl, setInputForBackendUrl] = useState("")
   const [onlyForTriggeringArerender, setOnlyForTriggeringArerender] = useState(false)
+
   function hasBeenUrlSet() {
   return cookies.backendUrl.get() !== null
   }
@@ -22,7 +23,7 @@ export default function Home() {
 
   return (
     <>
-<div>
+    <div>
       <PopUpFormWrapper onSubmit={() => {setOnlyForTriggeringArerender(true)}} isHidden={isBackendUrlSet}>
         <input type="text" onChange={(e) => setInputForBackendUrl(e.target.value)} value={inputForBackendUrl}/>
           <button

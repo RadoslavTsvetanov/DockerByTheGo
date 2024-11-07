@@ -7,6 +7,7 @@ import ClipLoader from "react-spinners/BeatLoader";
 import { useEffect, useState } from "react";
 import { ErrorComponent } from "~/components/customComponentsNotFromShadcn/error";
 import { ctx } from "~/utils/ctx";
+
 type BaseCtx = typeof ctx;
 
 export type ExtendedCtx<T extends object> = BaseCtx & {
@@ -33,8 +34,10 @@ type ctxType = ExtendedCtx<AdditionalPropertiesType>;
 export type pageProps = { ctx: ctxType };
 
 const MyApp: AppType<pageProps> = ({ Component, pageProps }) => {
+  const [isOnline,setIsOnline] = useState(true)
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
   const full_ctx: ExtendedCtx<AdditionalPropertiesType> = {
     ...ctx,
     setError: (state: string) => {
@@ -45,12 +48,32 @@ const MyApp: AppType<pageProps> = ({ Component, pageProps }) => {
     },
   };
 
+  useEffect(() => {
+    window.addEventListener("offline", () => {
+      setIsOnline(false)
+    }) 
+    window.addEventListener("online", () => {
+      setIsLoading(true);
+      setIsOnline(true);
+      setIsLoading(false)
+    })
+  }, []);
+
+
   if (error !== null) {
     return <ErrorComponent errorMsg={error} />;
   }
 
   if (isLoading) {
     return <ClipLoader loading={true} />;
+  }
+
+  if (!isOnline) {
+    return (
+      <div>
+        Currently offline, please connect to internet
+      </div>
+   ) 
   }
 
   return (
