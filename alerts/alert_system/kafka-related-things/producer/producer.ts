@@ -1,5 +1,4 @@
 import { type alertMessage } from './../consumers/utils/messageHandler';
-
 import { Kafka, type Producer } from "kafkajs";
 import { ENV } from "../env";
 import  express, { response } from "express";
@@ -25,19 +24,20 @@ const producer: Producer = kafka.producer();
 
 async function sendAlert(alert: alertMessage) {
     try {
-    await producer.connect();
-    console.log("Producer connected");
 
-    const topic = ENV.getAlertTopic(); 
+      await producer.connect();
+      console.log("Producer connected");
 
-    const result = await producer.send({
-      topic,
-      messages:[{value: JSON.stringify(alert)}]
-    });
+      const topic = ENV.getAlertTopic(); 
 
-    console.log("Message sent successfully:", result);
+      const result = await producer.send({
+        topic,
+        messages:[{value: JSON.stringify(alert)}]
+      });
+
+      console.log("Message sent successfully:", result);
   } catch (error) {
-    console.error(`Error sending messages: ${error}`);
+      console.error(`Error sending messages: ${error}`);
   }
 }
 
@@ -58,7 +58,7 @@ function getLastChannelId() {
 }
 
 function generateChannelId() {
-  return getLastChannelId()+ 1;
+  return getLastChannelId() + 1;
 }
 
 function createNewChannel(channel: {name: string, description: string, code: string }){
@@ -67,41 +67,44 @@ function createNewChannel(channel: {name: string, description: string, code: str
 
 }
 
-
-/* 
-example req  
-
-
-{
-  "handlerId": 1,
-  "content": "hui"
-}
-
-
-*/
-
-
-app.post("/alerts/new", async (req: express.Request<{}, { payload: {handlerId: number, content: string }}>, res: express.Response) => {
+app.post("/alerts/new", async (req: express.Request<{}, { payload: { handlerId: number, content: string } }>, res: express.Response) => {
   console.log(req.body.payload)
   const alertRes = await sendAlert(req.body.payload)
 
   res.status(200).json({
-   alertRes 
+    alertRes 
   });
 
 })
 
-app.post("/channel/new", async (req, res) => { 
-    const client = new YourServiceClient(ENV.getGrpcWorkloadServerUrl(),ChannelCredentials.createInsecure())
+enum FileExtensions {
+  JS,
+  PY
+}
+
+
+type CustomHandlerInfo = {
+  code: string,
+  fileExtension: FileExtensions
+}
+
+function uploadToS3(info : CustomHandlerInfo) {
+    
+}
+
+app.post("/channel/new", async (req: express.Request<{}, CustomHandlerInfo>, res: express.Response) => { 
+
+  const client = new YourServiceClient(ENV.getGrpcWorkloadServerUrl(), ChannelCredentials.createInsecure())
   // create_deployment_and_service_which_handles_the_execution_of_the_handler_and_after_that_save_somewhere_reference which is id -> url, note you might need an operator for this and also find a way to npt use a map but instead use it as a web server which redirects
-  client.createWorload({channelId: req.body.channelId}, (error: ServiceError | null, response: WorkloadResponse) => {
+  
+
+  client.createWorload({ channelId: req.body.channelId }, (error: ServiceError | null, response: WorkloadResponse) => {
     console.log(req.body)
     if (error) {
       console.log(error)
       exit()
     }
 
-    
     console.log(response.WorkloadHandlerUrl)
   })
 

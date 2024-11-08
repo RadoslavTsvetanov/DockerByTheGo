@@ -5,6 +5,6 @@ target
 env.tf
 .terraform
 /.terraform
-
+secrets.tf
 .exe
 .out

@@ -1,6 +1,6 @@
+# Lambda execution role
 resource "aws_iam_role" "lambda_exec_role" {
   name = "lambda_exec_role"
-
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -11,11 +11,19 @@ resource "aws_iam_role" "lambda_exec_role" {
   })
 }
 
+# Attach basic Lambda execution role
 resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
   role       = aws_iam_role.lambda_exec_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+# Attach VPC execution role
+resource "aws_iam_role_policy_attachment" "lambda_vpc_execution" {
+  role       = aws_iam_role.lambda_exec_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+}
+
+# GET Lambda function
 resource "aws_lambda_function" "get_lambda" {
   filename         = "../lambda/functions/funcctions.zip"
   function_name    = "GetLambda"
@@ -24,9 +32,8 @@ resource "aws_lambda_function" "get_lambda" {
   runtime          = "nodejs18.x"
   memory_size      = var.lambda_memory_size
   timeout          = var.lambda_timeout
-layers        = [aws_lambda_layer_version.my_lambda_layer.arn]
-
-
+  layers          = [aws_lambda_layer_version.my_lambda_layer.arn]
+  
   environment {
     variables = {
       DB_HOST     = aws_db_instance.db_instance.address
@@ -42,6 +49,7 @@ layers        = [aws_lambda_layer_version.my_lambda_layer.arn]
   }
 }
 
+# POST Lambda function
 resource "aws_lambda_function" "post_lambda" {
   filename         = "../lambda/functions/funcctions.zip"
   function_name    = "PostLambda"
@@ -50,9 +58,8 @@ resource "aws_lambda_function" "post_lambda" {
   runtime          = "nodejs18.x"
   memory_size      = var.lambda_memory_size
   timeout          = var.lambda_timeout
-  layers        = [aws_lambda_layer_version.my_lambda_layer.arn]
-
-
+  layers          = [aws_lambda_layer_version.my_lambda_layer.arn]
+  
   environment {
     variables = {
       DB_HOST     = aws_db_instance.db_instance.address

@@ -1,3 +1,4 @@
+import axios from "axios";
 import { ENV } from "../../env";
 
 export function emailAlert(props: { msg: string, reciever: string }) {

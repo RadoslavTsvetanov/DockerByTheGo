@@ -12,12 +12,17 @@ type ApiRequest<BodyType,ParamsType> = {
 }
 
 function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 
+function getAuthToken() {
+    // Implement logic to get token from your backend
+    return "your_token_here"
+}
+
 async function baseSendRequest<B,P,ResponseType>(request: ApiRequest<B,P>)  {
-    
+
     let numbersOfRetires = 0;
 
     while (true) {
@@ -47,7 +52,7 @@ async function baseSendRequest<B,P,ResponseType>(request: ApiRequest<B,P>)  {
         }
 
         const one_sec_in_ms = 1000;
-        await sleep(one_sec_in_ms)
+        await sleep(one_sec_in_ms * numbersOfRetires)
 
     }
 }

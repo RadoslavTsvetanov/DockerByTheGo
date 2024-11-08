@@ -7,7 +7,7 @@ import (
 
 
 type  workloadInfo struct{ // dont know the whole strcuture so i will abstract it behind a strcut
-
+	s3Url string
 }
 
 func fetch_workload_info() (workloadInfo, error) {
@@ -18,6 +18,7 @@ func fetch_workload_info() (workloadInfo, error) {
 func runWorkload(workloadInfo *workloadInfo){
 
 }
+
 func newHandler(w http.ResponseWriter, r *http.Request) {
 	info, err := fetch_workload_info();
 	if err!= nil {
