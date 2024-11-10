@@ -23,6 +23,7 @@ export const undoRedoStack = new UndoRedo(
 );
 
 export class CanvasSingleton {
+  public isGameStopped = false;
   private static instance: CanvasSingleton;
   private canvas: HTMLCanvasElement;
   public ctx: CanvasRenderingContext2D;
@@ -77,6 +78,9 @@ export class CanvasSingleton {
 
     const handler = (event: CustomEvent<ExecuteFrameMessage>) => {
       gameLoop.executeFrame(() => {
+        if (this.isGameStopped) {
+          return
+        }
         this.update();
         this.draw();
       })
@@ -135,8 +139,8 @@ export class CanvasSingleton {
       this.selectObj.geometricProperties = {
         x: this.cursor.position.x,
         y: this.cursor.position.y,
-        width: this.currentObject?.geometricProperties.width,
-        height: this.currentObject?.geometricProperties.height
+        width: this.currentObject?.type === CursorTypes.Select ? this.currentObject?.geometricProperties.width : 1,
+        height:  this.currentObject?.type === CursorTypes.Select ?  this.currentObject?.geometricProperties.height : 1
       }
       if (this.currentObject) {
         this.objectManager.addObject(this.currentObject);
@@ -146,19 +150,13 @@ export class CanvasSingleton {
   }
 
   private handleMouseUp(): void {
-
+    if (this, this.currentObject) { 
+      this.selectObj.geometricProperties = { ...this.currentObject?.geometricProperties }
+    }
     triggerFrameExecution();
     this.isDrawing = false;
     this.lastPosition = null;
     Cursor.getInstance().setCursor(CursorState.Up);
-    this.objectManager.getAllObjects().forEach(o => {
-      if (o instanceof Select) {
-        console.log("ggggg",o)
-        this.cursor.position = {
-          ...o.geometricProperties
-        }
-      }
-    })
     this.clearSelectionObjects();
     this.undoRedo.takeSnapshot();
   }
@@ -167,7 +165,6 @@ export class CanvasSingleton {
 
     triggerFrameExecution();
     const position = this.getMousePosition(event);
-    console.log("current obj dimen", this.currentObject?.geometricProperties)
     this.cursor.position = {
       x: position.x,
       y: position.y,
@@ -226,13 +223,16 @@ export class CanvasSingleton {
     this.selectedObjects.clearAllObjects();
     this.selectObj.draw(this.ctx)
     console.log("objects during collision process", {
-      select: this.selectedObjects,
+      select: this.selectObj,
       others: this.objectManager.getAllObjects()
     })
+    if (this.selectObj.geometricProperties.width > 10) {
+      console.log("objects")
+    }
     this.objectManager.getAllObjects().forEach((obj) => {
       if (obj.isOverlapping(this.selectObj) && cursor.type === CursorTypes.Select) {
         
-        console.log("ooooooo",obj)
+        console.log("gwhecbfgkwrljqj;qnecgqh ",obj)
         if (obj instanceof Select || obj.type.valueOf() === "Select") {
 
           return

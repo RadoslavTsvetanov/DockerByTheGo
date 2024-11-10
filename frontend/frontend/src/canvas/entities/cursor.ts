@@ -13,6 +13,7 @@ export enum CursorTypes {
   Arrow = "Arrow",
 }
 
+
 export class Cursor {
 
   private static instance: Cursor;
@@ -34,7 +35,6 @@ export class Cursor {
     return this._position;
   }
   public set position(position: { x: number; y: number }) {
-    console.log("pos",position)
     this._position = position;
   }
 

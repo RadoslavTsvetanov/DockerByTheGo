@@ -4,6 +4,7 @@ import { CurrentlyPressedKeys } from "./eventListeners";
 import { KeyCodes } from "./utils/keycodes";
 import { zoomStep } from "~/components/customComponentsNotFromShadcn/projectCanvas";
 import { zoom } from "./entities/scale";
+import { gameLoop } from "./entities/gameLoo";
 function setUpEventListeners(canvasManager: CanvasSingleton) {
     
 
@@ -22,9 +23,12 @@ function setUpEventListeners(canvasManager: CanvasSingleton) {
       
       if (currentlyPressedKeys.checkForKeyPresss([KeyCodes.BackSpace])) {
         console.log("pop")
-        canvasManager.deleteSelected()
+        // canvasManager.deleteSelected()
       }
 
+      if (currentlyPressedKeys.checkForKeyPresss([KeyCodes.Control])) {
+        canvasManager.isGameStopped = !canvasManager.isGameStopped 
+      }
 
 
 
