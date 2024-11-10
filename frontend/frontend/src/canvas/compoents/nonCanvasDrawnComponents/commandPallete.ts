@@ -10,7 +10,7 @@ type RequestCommandExecutionMessage = {
 class MessageListener {
 
     constructor() {
-        document.addEventListener('executeCommand', (data: any /* fix type later  */) => {
+        document.addEventListener('executeCommand', (data /* fix type later  */) => {
             console.log(data.detail.command);
             console.log(data.detail.payload);
 

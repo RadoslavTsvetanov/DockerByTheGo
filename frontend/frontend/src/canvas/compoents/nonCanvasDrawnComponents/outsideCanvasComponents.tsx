@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { actionsManager } from "../../entities/actionManager";
-import { Cursor, CursorType } from "../../entities/cursor";
+import { Cursor, CursorTypes } from "../../entities/cursor";
 import { undoRedoStack } from "../../canvas";
 import { zoom } from '~/canvas/entities/scale';
 
-function setCursorType(type: CursorType) {
+function setCursorType(type: CursorTypes) {
   const cursor = Cursor.getInstance();
   cursor.type = type;
 }
@@ -65,22 +65,22 @@ const [state, setState] = useState("using it to just trigger a rerender when the
     {
       icon: "https://example.com/icon1.png",
       alt: "Circle",
-      onClick: () => setCursorType(CursorType.Circle),
+      onClick: () => setCursorType(CursorTypes.Circle),
     },
     {
       icon: "https://example.com/icon2.png",
       alt: "Rectangle",
-      onClick: () => setCursorType(CursorType.Rectangle),
+      onClick: () => setCursorType(CursorTypes.Rectangle),
     },
     {
       icon: "https://example.com/icon3.png",
       alt: "TextArea",
-      onClick: () => setCursorType(CursorType.TextArea),
+      onClick: () => setCursorType(CursorTypes.TextArea),
     },
     {
       icon: "https://example.com/icon.png",
       alt: "Select",
-      onClick: () => setCursorType(CursorType.Select),
+      onClick: () => setCursorType(CursorTypes.Select),
     },
   ];
 

@@ -1,6 +1,6 @@
 import { CanvasObject } from "./compoents/baseCompoents";
 import { Rectangle } from "./compoents/canvasObjects";
-import { CursorType } from "./entities/cursor";
+import { CursorTypes } from "./entities/cursor";
 import { CanvasElementsManager, ManagerObjects } from "./objectsManager";
 
 class Serializer {
@@ -10,15 +10,25 @@ class Serializer {
         return JSON.stringify(canvasManager.getAllObjects());
     }
 
-    deseriazlize(serializedstate: string): CanvasObject[] {
+    deseriazlize(serializedstate: string): ManagerObjects {
+        
         const state = JSON.parse(serializedstate) as CanvasObject[];
+        
         // Implementation to deserialize JSON string and return CanvasElementsManager object
-        const objectsToReturn: CanvasObject[] = []
+        const objectsToReturn: Record<string, CanvasObject> = {};
         state.forEach((canvasObject) => {
+            console.log(canvasObject)
+            
             switch (canvasObject.type) {
-                case CursorType.Rectangle:
-                    objectsToReturn.push(new Rectangle(canvasObject.geometricProperties.x, canvasObject.geometricProperties.y, canvasObject.geometricProperties.width, canvasObject.geometricProperties.height, canvasObject.id, canvasObject.bgColor, canvasObject.boundariesColor))
-                    break;
+                case CursorTypes.Rectangle:
+                    objectsToReturn[canvasObject.id] = (new Rectangle(canvasObject.geometricProperties.x, canvasObject.geometricProperties.y, canvasObject.geometricProperties.width, canvasObject.geometricProperties.height, canvasObject.id, canvasObject.bgColor, canvasObject.boundariesColor))
+                    break; 
+                
+                case CursorTypes.Arrow:
+
+                    break
+                
+                
             }
         })
         return objectsToReturn;

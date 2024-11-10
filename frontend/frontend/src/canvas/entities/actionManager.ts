@@ -24,6 +24,7 @@ abstract class Action implements IAction {
   }
 
   abstract execute(): void;
+  abstract reverseExecute(): void;
 }
 
 export class CreateAction extends Action {
@@ -35,6 +36,10 @@ export class CreateAction extends Action {
     // Implementation for create action
     console.log(`Created: ${this.payload}`);
   }
+
+  reverseExecute(): void {
+      return
+  }
 }
 
 export class DeleteAction extends Action {
@@ -43,17 +48,20 @@ export class DeleteAction extends Action {
   }
 
   execute(): void {
-    // Implementation for delete action
     console.log(`Deleted: ${this.payload}`);
-  
-  
   }
+
+    reverseExecute(): void {
+      return
+  }
+
 }
 
 class ActionsManager {
   public actions: IAction[] = [];
   
-    addAction(action: IAction): void { 
+
+  addAction(action: IAction): void { 
         this.actions.push(action);
     }
 

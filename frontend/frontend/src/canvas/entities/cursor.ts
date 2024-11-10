@@ -3,7 +3,7 @@ export enum CursorState {
   Up,
 }
 
-export enum CursorType {
+export enum CursorTypes {
   Idle = "Idle",
   Rectangle = "Rectangle",
   Square = "Square",
@@ -17,10 +17,11 @@ export class Cursor {
 
   private static instance: Cursor;
   private cursorState: CursorState = CursorState.Up;
-  private cursorType: CursorType = CursorType.Idle;
-    private _position: { x: number; y: number, width: number, height: number } = { x: 0, y: 0, width: 0,height: 0 };
+  private cursorType: CursorTypes = CursorTypes.Idle;
+  private _position: { x: number; y: number } = { x: 0, y: 0 };
 
-  private constructor() {}
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  private constructor() { }
 
   public static getInstance(): Cursor {
     if (!Cursor.instance) {
@@ -32,14 +33,15 @@ export class Cursor {
   public get position() {
     return this._position;
   }
-  public set position(position: { x: number; y: number, width: number, height: number}) {
+  public set position(position: { x: number; y: number }) {
+    console.log("pos",position)
     this._position = position;
   }
 
   public get type() {
     return this.cursorType;
   }
-  public set type(type: CursorType) {
+  public set type(type: CursorTypes) {
     this.cursorType = type;
   }
 
@@ -50,4 +52,6 @@ export class Cursor {
   public isDown() {
     return this.cursorState === CursorState.Down;
   }
+
+  
 }

@@ -1,8 +1,8 @@
 import { CanvasObject } from "./compoents/baseCompoents";
 
 export type ManagerObjects = Record<number, CanvasObject | undefined>;
-
-abstract class ObjectManager<T extends CanvasObject> {
+type T= CanvasObject // remove at first glance
+abstract class ObjectManager {
   private objects: ManagerObjects;
 
   constructor(currentElements: ManagerObjects = {}) {
@@ -18,7 +18,7 @@ abstract class ObjectManager<T extends CanvasObject> {
   }
 
   setObjects(objects: ManagerObjects): void {
-    this.objects = {...objects}
+    this.objects = { ...objects };
   }
 
   clearAllObjects() {
@@ -26,41 +26,33 @@ abstract class ObjectManager<T extends CanvasObject> {
   }
 
   getAllObjects(): T[] {
-    const objects: T[] = [];
-    for (const value of Object.values(this.objects)) {
-      if (value !== undefined && value !== null) {
-        objects.push(value as T);
-      }
-    }
-    return objects;
+    return Object.values(this.objects).filter(
+      (value): value is T => value !== undefined,
+    );
   }
 
+  getObject(id: number): T | undefined {
+    return this.objects[id];
+  }
 
-  getObject(id: number) {
-      return this.objects[id];
-    }
+  abstract clone(): ObjectManager;
 
-  abstract cloneObjectsInsideManager(): any  // TODO: how to add a good generic here
-
-  cloneObjects(): CanvasObject[]{
-    const clonedObjects: CanvasObject[] = [];
-    this.getAllObjects().forEach((canvasObg) => {
-      const copy = canvasObg.copy();
-      if (!copy) {
-        return;
-      }
-      clonedObjects.push(copy);
-    })
+  cloneObjectsInsideManager(): ManagerObjects {
+    const clonedObjects: ManagerObjects = {};
+    this.getAllObjects().forEach((obj) => {
+      const copy = obj.copy();
+      if (copy) clonedObjects[obj.id] = copy;
+    });
     return clonedObjects;
   }
 }
 
-export class CanvasElementsManager extends ObjectManager<CanvasObject> {
-  removedObjects: ManagerObjects;
+export class CanvasElementsManager extends ObjectManager{
+  private removedObjects: ManagerObjects;
 
   constructor(
     currentElements: ManagerObjects = {},
-    removedObjects: ManagerObjects = {}
+    removedObjects: ManagerObjects = {},
   ) {
     super(currentElements);
     this.removedObjects = removedObjects;
@@ -71,54 +63,33 @@ export class CanvasElementsManager extends ObjectManager<CanvasObject> {
     this.clearObject(id);
   }
 
-    clone(): CanvasElementsManager {
-      const clonedObjects = this.cloneObjectsInsideManager()
-      return new CanvasElementsManager(clonedObjects.clonedObjects, clonedObjects.clonedRemovedObjects)
+  clone(): CanvasElementsManager {
+    return new CanvasElementsManager(
+      this.cloneObjectsInsideManager(),
+      this.cloneRemovedObjects(),
+    );
   }
-    
-  cloneObjectsInsideManager() {
-      const clonedObjects: ManagerObjects = {};
 
-      this.getAllObjects().forEach((canvasObg) => {
-        const copy = canvasObg.copy();
-        if (!copy) {
-          return;
-        }
-        clonedObjects[canvasObg.id] = copy;
-      })
-
-        const clonedRemovedObjects: ManagerObjects = {};
-        for (const id in this.removedObjects) { 
-            const copy = this.removedObjects[id]?.copy();
-            if (!copy) {
-              continue;
-            }
-            clonedRemovedObjects[id] = copy;
-        }
-
-        return {
-            clonedObjects,
-            clonedRemovedObjects
-        }
+  private cloneRemovedObjects(): ManagerObjects {
+    const clonedRemovedObjects: ManagerObjects = {};
+    for (const id in this.removedObjects) {
+      const copy = this.removedObjects[id]?.copy();
+      if (copy) clonedRemovedObjects[id] = copy;
     }
+    return clonedRemovedObjects;
+  }
 }
 
-export class SelectedElementsManager extends ObjectManager<CanvasObject> {
+export class SelectedElementsManager extends ObjectManager{
   constructor(selectedObjects: ManagerObjects = {}) {
     super(selectedObjects);
   }
 
   executeCallbackOnElements(callback: (elements: CanvasObject[]) => void) {
-    const selectedObjects = this.getAllObjects();
-    callback(selectedObjects);
+    callback(this.getAllObjects());
   }
 
   clone(): SelectedElementsManager {
     return new SelectedElementsManager(this.cloneObjectsInsideManager());
   }
-
-  cloneObjectsInsideManager() {
-    return super.cloneObjects()
-  }
-    
 }

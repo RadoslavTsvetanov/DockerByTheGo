@@ -1,4 +1,4 @@
-import { Cursor, CursorState, CursorType } from "../entities/cursor";
+import { Cursor, CursorState, CursorTypes } from "../entities/cursor";
 import { generateId } from ".././utils/idGenerator";
 import { RectBase, CanvasObject } from "./baseCompoents";
 
@@ -21,16 +21,16 @@ export class Rectangle extends RectBase {
       id,
       bgColor,
       boundariesColor,
-      CursorType.Rectangle
+      CursorTypes.Rectangle
     );
   }
 
   copy(): Rectangle {
     return new Rectangle(
-      this.rect.x,
-      this.rect.y,
-      this.rect.width,
-      this.rect.height,
+      this.geometricProperties.x,
+      this.geometricProperties.y,
+      this.geometricProperties.width,
+      this.geometricProperties.height,
       this.id,
       this.bgColor,
       this.boundariesColor
@@ -47,14 +47,14 @@ export class Square extends RectBase {
     bgColor: string,
     boundariesColor: string
   ) {
-    super(x, y, size, size, id, bgColor, boundariesColor, CursorType.Square);
+    super(x, y, size, size, id, bgColor, boundariesColor, CursorTypes.Square);
   }
 
   copy(): Square {
     return new Square(
-      this.rect.x,
-      this.rect.y,
-      this.rect.width,
+      this.geometricProperties.x,
+      this.geometricProperties.y,
+      this.geometricProperties.width,
 this.id,
       this.bgColor,
       this.boundariesColor
@@ -89,17 +89,17 @@ export class TextObject extends Rectangle {
     ctx.font = "16px Arial";
     ctx.fillText(
       this.text,
-      this.rect.x + this.rect.width / 2,
-      this.rect.y + this.rect.height / 2
+      this.geometricProperties.x + this.geometricProperties.width / 2,
+      this.geometricProperties.y + this.geometricProperties.height / 2
     );
   }
 
   copy(): TextObject {
     return new TextObject(
-      this.rect.x,
-      this.rect.y,
-      this.rect.width,
-      this.rect.height,
+      this.geometricProperties.x,
+      this.geometricProperties.y,
+      this.geometricProperties.width,
+      this.geometricProperties.height,
 this.id,
       this.text,
       this.bgColor,
@@ -121,7 +121,7 @@ export class Circle extends CanvasObject {
     bgColor: string,
     boundariesColor: string
   ) {
-    super(id, bgColor, boundariesColor, CursorType.Circle, {
+    super(id, bgColor, boundariesColor, CursorTypes.Circle, {
       x,
       y,
       width: radius,
@@ -141,8 +141,8 @@ export class Circle extends CanvasObject {
     this.showBoundaries(ctx);
   }
 
-  isOverlapping(cursor: Cursor): boolean {
-    const pos = cursor.position;
+  isOverlapping(otherObj:CanvasObject): boolean {
+    const pos = otherObj.geometricProperties;
     const distance = Math.sqrt(
       Math.pow(pos.x - this.x, 2) + Math.pow(pos.y - this.y, 2)
     );
@@ -179,15 +179,15 @@ export class Circle extends CanvasObject {
 export class Select extends Rectangle {
   constructor(x: number, y: number, w: number, h: number) {
     super(x, y, w, h, generateId(), "transparent", "red");
-    this.type = CursorType.Select;
+    this.type = CursorTypes.Select;
   }
 
   copy(): Select {
     return new Select(
-      this.rect.x,
-      this.rect.y,
-      this.rect.width,
-      this.rect.height
+      this.geometricProperties.x,
+      this.geometricProperties.y,
+      this.geometricProperties.width,
+      this.geometricProperties.height
     );
   }
 }
@@ -212,10 +212,18 @@ class Arrow extends Line {
     super(new Circle(0,0,5,generateId(),"white","red"), new Circle(0,0,5,generateId(),"white","red"));
   }
 
-
+  private drawTriangle(ctx: CanvasRenderingContext2D) {
+    ctx.beginPath();
+    ctx.moveTo(this.geometricProperties.x, this.geometricProperties.y);
+    ctx.lineTo(this.geometricProperties.x + this.geometricProperties.width, this.geometricProperties.y + this.geometricProperties.height / 2);
+    ctx.lineTo(this.geometricProperties.x, this.geometricProperties.y + this.geometricProperties.height);
+    ctx.closePath();
+    ctx.fillStyle = "red";
+    ctx.fill();
+  }
 
   draw(ctx: CanvasRenderingContext2D) { 
     super.draw(ctx);
-    
+    this.drawTriangle(ctx);
   }
 }

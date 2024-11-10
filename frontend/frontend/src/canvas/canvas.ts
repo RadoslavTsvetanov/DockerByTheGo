@@ -1,3 +1,4 @@
+import { getShortcutCombination } from '~/canvas/utils/shortucts';
 import { zoom } from './entities/scale';
 import { actionsManager, CreateAction } from "./entities/actionManager";
 import {
@@ -7,15 +8,12 @@ import {
   Select,
 } from "./compoents/canvasObjects";
 import { Snapshot, UndoRedo } from "./entities/undoRedoTree";
-import { Cursor, CursorType, CursorState } from "./entities/cursor";
+import { Cursor, CursorTypes, CursorState } from "./entities/cursor";
 import { generateId } from "./utils/idGenerator";
-import { SelectedElementsManager,CanvasElementsManager } from "./objectsManager";
+import { SelectedElementsManager, CanvasElementsManager } from "./objectsManager";
 import { CanvasObject } from "./compoents/baseCompoents";
 import { serializer } from './serializer';
-import { deserialize } from 'v8';
-
-
-
+import { ExecuteFrameMessage, gameLoop, triggerFrameExecution } from './entities/gameLoo';
 
 const selectedObjectsManager = new SelectedElementsManager();
 const objectsManager = new CanvasElementsManager();
@@ -34,20 +32,30 @@ export class CanvasSingleton {
   public selectedObjects = selectedObjectsManager;
   private currentObject: CanvasObject | null = null;
   private undoRedo = undoRedoStack;
-  private state = ""
+  private state = "";
+  private cursor = Cursor.getInstance();
+  private isDrawing = false;
+  private selectObj = new Select(0,0,1,1)
+
   private constructor(canvas: HTMLCanvasElement) {
-    this.canvas = canvas; 
+    this.canvas = canvas;
     this.ctx = this.canvas.getContext("2d")!;
     this.initializeCanvas();
     this.addEventListeners();
-
     this.undoRedo.takeSnapshot();
+    this.setUpGameLoop()
   }
 
   public static getInstance(canvas: HTMLCanvasElement): CanvasSingleton {
     if (!CanvasSingleton.instance) {
       CanvasSingleton.instance = new CanvasSingleton(canvas);
     }
+
+    return CanvasSingleton.instance;
+  }
+
+  public static getFullyWorkingInstance() {
+    
     return CanvasSingleton.instance;
   }
 
@@ -56,76 +64,134 @@ export class CanvasSingleton {
     this.canvas.height = window.innerHeight;
   }
 
-  public clearCanvas(): void {
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+  private startGameLoop(): void {
+    const loop = () => {
+      this.update();
+      this.draw();
+      requestAnimationFrame(loop);
+    };
+    requestAnimationFrame(loop);
+  }
+
+  private setUpGameLoop(): void {
+
+    const handler = (event: CustomEvent<ExecuteFrameMessage>) => {
+      gameLoop.executeFrame(() => {
+        this.update();
+        this.draw();
+      })
+    }
+
+  document.addEventListener("triggerFrameExecution",handler as EventListener )
+  
+  }
+
+  private update(): void {
+    const cursor = Cursor.getInstance();
+
+    if (this.isDrawing && this.currentObject && this.lastPosition) {
+      this.updateCurrentObjectDimensions(cursor);
+    }
+
+    this.checkCollisions(cursor);
+  }
+
+  private draw(): void {
+    this.clearCanvas();
+    const scale = zoom.getZoomLevel();
+
+    this.objectManager.getAllObjects().forEach(obj => {
+      obj.draw(this.ctx)
+    }
+    );
+
+    this.selectedObjects.getAllObjects().forEach(obj => {
+      try {
+        obj.highlight(this.ctx);
+      } catch (e) {
+        console.error("Error highlighting object:", e);
+      }
+    });
+
+    this.state = serializer.serialize(this.objectManager);
   }
 
   private addEventListeners(): void {
-    this.canvas.addEventListener("mousedown", (event) => {
-      
-      if (event.button === 0) {
-        const cursor = Cursor.getInstance();
-        cursor.setCursor(CursorState.Down);
-        this.lastPosition = {
-          x: event.clientX - this.canvas.getBoundingClientRect().left,
-          y: event.clientY - this.canvas.getBoundingClientRect().top,
-        };
-
-        this.currentObject = this.createObjectFromCursor(cursor.type);
-
-        if (this.currentObject) {
-          this.objectManager.addObject(this.currentObject);
-        }
-      }
-    });
-
-    this.canvas.addEventListener("mouseup", () => {
-      this.selectedObjects.clearAllObjects()
-      Cursor.getInstance().setCursor(CursorState.Up);
-      this.lastPosition = null;
-      this.currentObject = null;
-
-      // Remove the select objects
-      this.objectManager.getAllObjects().forEach((object) => {
-        if (object instanceof Select) {
-          this.objectManager.clearObject(object.id);
-        }
-      });
-
-      this.undoRedo.takeSnapshot();
-      console.log(this.undoRedo.snapshots)
-    
-    
-    
-    this.checkCollisions();
-    });
-
-    this.canvas.addEventListener("mousemove", (event) => {
-      const cursor = Cursor.getInstance();
-      const rect = this.canvas.getBoundingClientRect();
-      cursor.position = {
-        x: event.clientX - rect.left,
-        y: event.clientY - rect.top,
-        width: 0,
-        height: 0,
-      };
-
-      if (this.currentObject && cursor.isDown()) {
-        this.updateCurrentObjectDimensions(cursor);
-      }
-    });
+    this.canvas.addEventListener("mousedown", (event) => this.handleMouseDown(event));
+    this.canvas.addEventListener("mouseup", () => this.handleMouseUp());
+    this.canvas.addEventListener("mousemove", (event) => this.handleMouseMove(event));
   }
 
-  private createObjectFromCursor(cursorType: CursorType): CanvasObject | null {
+  private handleMouseDown(event: MouseEvent): void {
+    triggerFrameExecution();
+    if (event.button === 0) {
+      this.cursor.position = {
+        x: this.cursor.position.x,
+        y: this.cursor.position.y,
+      }
+      this.cursor.setCursor(CursorState.Down);
+      this.lastPosition = this.getMousePosition(event);
+      this.currentObject = this.createObjectFromCursor(this.cursor.type);
+      this.selectObj.geometricProperties = {
+        x: this.cursor.position.x,
+        y: this.cursor.position.y,
+        width: this.currentObject?.geometricProperties.width,
+        height: this.currentObject?.geometricProperties.height
+      }
+      if (this.currentObject) {
+        this.objectManager.addObject(this.currentObject);
+        this.isDrawing = true;
+      }
+    }
+  }
+
+  private handleMouseUp(): void {
+
+    triggerFrameExecution();
+    this.isDrawing = false;
+    this.lastPosition = null;
+    Cursor.getInstance().setCursor(CursorState.Up);
+    this.objectManager.getAllObjects().forEach(o => {
+      if (o instanceof Select) {
+        console.log("ggggg",o)
+        this.cursor.position = {
+          ...o.geometricProperties
+        }
+      }
+    })
+    this.clearSelectionObjects();
+    this.undoRedo.takeSnapshot();
+  }
+
+  private handleMouseMove(event: MouseEvent): void {
+
+    triggerFrameExecution();
+    const position = this.getMousePosition(event);
+    console.log("current obj dimen", this.currentObject?.geometricProperties)
+    this.cursor.position = {
+      x: position.x,
+      y: position.y,
+    };
+  }
+
+  private getMousePosition(event: MouseEvent): { x: number; y: number } {
+    const rect = this.canvas.getBoundingClientRect();
+    return {
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+    };
+  }
+
+  private createObjectFromCursor(cursorType: CursorTypes): CanvasObject | null {
     const { x, y } = this.lastPosition!;
     switch (cursorType) {
-      case CursorType.Rectangle:
+      case CursorTypes.Rectangle:
         return new Rectangle(x, y, 0, 0, generateId(), "transparent", "yellow");
-      case CursorType.Circle:
+      case CursorTypes.Circle:
         return new Circle(x, y, 0, generateId(), "transparent", "yellow");
-      case CursorType.TextArea:
+      case CursorTypes.TextArea:
         return new TextObject(x, y, 0, 0, generateId(), "hi", "yellow", "yellow");
-      case CursorType.Select:
+      case CursorTypes.Select:
         return new Select(x, y, 0, 0);
       default:
         return null;
@@ -135,66 +201,49 @@ export class CanvasSingleton {
   private updateCurrentObjectDimensions(cursor: Cursor) {
     const { x, y } = this.lastPosition!;
     if (this.currentObject instanceof Rectangle) {
-      const width = cursor.position.x - x;
-      const height = cursor.position.y - y;
-      this.currentObject.rect = { x, y, width, height };
+      console.log("updateCurrentObjectDimensions")
+      this.currentObject.geometricProperties = {
+        x,
+        y,
+        width: cursor.position.x - x,
+        height: cursor.position.y - y,
+      };
     } else if (this.currentObject instanceof Circle) {
-      const radius = Math.sqrt(
+      this.currentObject.radius = Math.sqrt(
         Math.pow(cursor.position.x - x, 2) + Math.pow(cursor.position.y - y, 2)
       );
-      this.currentObject.radius = radius;
-    } else if (this.currentObject instanceof Select) {
-      cursor.position = {
-        x: this.currentObject.geometricProperties.x,
-        y: this.currentObject.geometricProperties.y,
-        width: this.currentObject.geometricProperties.width,
-        height: this.currentObject.geometricProperties.height,
-      };
     }
   }
 
-  deleteSelected() {
-    this.selectedObjects.getAllObjects().forEach((obj => {
-      this.objectManager.clearObject(obj.id);
-    }))
-
-    this.selectedObjects.getAllObjects().forEach(obj => {
-      this.selectedObjects.clearObject(obj.id)
-    })
-  }
-
-  public draw(): void {
-    this.objectManager.setObjects(serializer.deseriazlize(this.state))
-    console.log("jij")
-    this.clearCanvas();
-    const scale = zoom.getZoomLevel()
-
-    for (const obj of this.objectManager.getAllObjects()) {
-      
-      obj.draw(this.ctx);
-    }
+  private clearSelectionObjects(): void {
+    this.objectManager.getAllObjects()
+      .filter(obj => obj instanceof Select)
+      .forEach(obj => this.objectManager.clearObject(obj.id));
     
-    for (const obj of this.selectedObjects.getAllObjects()) {
-      try {
-        obj.highlight(this.ctx)
-      } catch (e) { 
-
-      }
-      
-      }
-      
-    this.state = serializer.serialize(this.objectManager)
   }
 
-  
-
-  public checkCollisions(): void {
-    const cursor = Cursor.getInstance();
+  private checkCollisions(cursor: Cursor): void {
+    this.selectedObjects.clearAllObjects();
+    this.selectObj.draw(this.ctx)
+    console.log("objects during collision process", {
+      select: this.selectedObjects,
+      others: this.objectManager.getAllObjects()
+    })
     this.objectManager.getAllObjects().forEach((obj) => {
-      if (obj.isOverlapping(cursor)) {
+      if (obj.isOverlapping(this.selectObj) && cursor.type === CursorTypes.Select) {
+        
+        console.log("ooooooo",obj)
+        if (obj instanceof Select || obj.type.valueOf() === "Select") {
+
+          return
+        }
         this.selectedObjects.addObject(obj);
       }
     });
-    console.log("selected", this.selectedObjects.getAllObjects());
+  }
+
+  public clearCanvas(): void {
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
 }
+
