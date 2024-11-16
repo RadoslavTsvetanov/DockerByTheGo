@@ -3,8 +3,7 @@ package helper
 import (
 	"context"
 	"fmt"
-	"k8s/primitives"
-	. "k8s/primitives"
+	. "k8s/utils"
 
 	"github.com/google/uuid"
 	corev1 "k8s.io/api/core/v1"
@@ -39,7 +38,7 @@ func CreateUnmanagedContainer(namespace string, name StringOrNil, env map[string
 	}
 }
 
-func CreateManagedContainer(namespace string, containerName primitives.StringOrNil, env map[string]string, labels map[string]string, imageName string, port int) {
+func CreateManagedContainer(namespace string, containerName StringOrNil, env map[string]string, labels map[string]string, imageName string, port int) {
 
 	// Create projectName env variable based on name
 	var projectName string

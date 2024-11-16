@@ -1,7 +1,7 @@
 package helper
 
 import (
-	. "k8s/primitives"
+	. "k8s/utils"
 
 	rbacv1 "k8s.io/api/rbac/v1"
 )
@@ -35,7 +35,7 @@ func setUpProject(name string) {
 	})
 }
 
-func deleteProject(namespace string) {
+func DeleteProject(namespace string) {
 	client, err := GetK8sClient()
 	DefaultHandleError(err)
 	// Delete the namespace itself

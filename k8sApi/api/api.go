@@ -1,87 +1,143 @@
 package api
 
 import (
-	"encoding/json"
+	"fmt"
+	. "k8s/db"
 	"log"
 	"net/http"
+	"strings"
+	"time"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 )
 
-func addUserToProjectHandler() {}
-
-func createProjectHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-		return
-	}
-
-	var data struct {
-		ProjectName string `json:"projectName"`
-		CreatorName string `json:"creatorName"`
-	}
-
-	err := json.NewDecoder(r.Body).Decode(&data)
-	if err != nil {
-		http.Error(w, "Bad request", http.StatusBadRequest)
-		return
-	}
-
-	response :=  createProject(data.ProjectName, data.CreatorName)
-	
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+// GenerateToken generates a dummy token (replace with a secure implementation)
+func GenerateToken(username string) string {
+	return fmt.Sprintf("token_for_%s", username)
 }
 
-
-func deleteProjectHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodDelete {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-		return
-	}
-
-	projectName := r.URL.Query().Get("projectName")
-	if projectName == "" {
-		http.Error(w, "Project name is required", http.StatusBadRequest)
-		return
-	}
-
-	deleteProject(projectName)
-
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Project deleted successfully"))
+// API contains the UserRepo
+type API struct {
+	repo *UserRepo
 }
 
-func getProjectConnectInfoHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-		return
-	}
-
-	// Parse projectName and username from query parameters
-	projectName := r.URL.Query().Get("projectName")
-	username := r.URL.Query().Get("username")
-	if projectName == "" || username == "" {
-		http.Error(w, "Project name and username are required", http.StatusBadRequest)
-		return
-	}
-
-	// getProjectConnectInfo(projectName, username)
-
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Project connection info retrieved"))
+// NewAPI creates a new API instance
+func NewAPI(repo *UserRepo) *API {
+	return &API{repo: repo}
 }
 
-func setUpK8sHelperApi() {
-	http.HandleFunc("/projects/new", )
-	http.HandleFunc("/projects/:id", )
-	http.HandleFunc("/project/:id/containers/new",)
-	http.HandleFunc("/projects/:id/containers/container_name") // patch, {payload: new_data} 
-	http.HandleFunc("/projects/:id/containers/container_name") // delete
-	http.HandleFunc("projects/:id/roles/new") // for post {}
+// SignupHandler handles user registration
+func (api *API) SignupHandler(c *gin.Context) {
+	var req struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
 
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		return
+	}
 
+	if req.Username == "" || req.Password == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Username and password are required"})
+		return
+	}
 
+	_, _, _, err := api.repo.GetUser(req.Username)
+	if err == nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "User already exists"})
+		return
+	}
 
+	token := GenerateToken(req.Username)
+	if err := api.repo.CreateUser(req.Username, req.Password, token); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+		return
+	}
 
-	log.Println("Starting server on :8080...")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	c.JSON(http.StatusCreated, gin.H{"message": "User created successfully", "token": token})
+}
+
+// LoginHandler handles user login
+func (api *API) LoginHandler(c *gin.Context) {
+	var req struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		return
+	}
+
+	if req.Username == "" || req.Password == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Username and password are required"})
+		return
+	}
+
+	username, password, token, err := api.repo.GetUser(req.Username)
+	if err != nil || password != req.Password {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid username or password"})
+		return
+	}
+
+	issueTokenForUser(username)
+
+	c.JSON(http.StatusOK, gin.H{"message": "Login successful", "token": token})
+}
+
+func RequestLoggerMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		start := time.Now()
+		path := c.Request.URL.Path
+		method := c.Request.Method
+
+		if(!strings.Contains(path, "/auth")){ 
+			if(!TokenExists(c.GetHeader("Auth"))){
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			}
+		}
+
+		// Proceed to the next handler
+		c.Next()
+
+		status := c.Writer.Status()
+		duration := time.Since(start)
+
+		log.Printf("[GIN] %s %s - %d (%v)", method, path, status, duration)
+	}
+}
+
+// SetupServer sets up and starts the Gin server
+func SetupServer(repo *UserRepo) {
+	// Initialize the API instance
+	api := NewAPI(repo)
+
+	// Create a Gin router
+	router := gin.Default()
+
+	// Enable CORS for all origins, methods, and headers
+	router.Use(cors.Default())
+
+	// Apply the logger middleware globally
+	router.Use(RequestLoggerMiddleware())
+
+	// API routes
+	router.POST("/auth/signup", api.SignupHandler)
+	router.POST("/auth/login", api.LoginHandler)
+
+	// Placeholder routes for additional endpoints (if required)
+	router.GET("/getK8sToken/:username", func(c *gin.Context) {
+		
+		c.JSON(http.StatusNotImplemented, gin.H{"error": "Not implemented"})
+	})
+	router.POST("/setK8sToken/:username", func(c *gin.Context) {
+		c.JSON(http.StatusNotImplemented, gin.H{"error": "Not implemented"})
+	})
+
+	fmt.Println("Server running on :8080")
+	if err := router.Run(":8080"); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
+	}
 }

@@ -2,9 +2,19 @@ package main
 
 import (
 	"fmt"
-	. "k8s/primitives"
+	// . "k8s/primitives"
+	"context"
+	. "k8s/api"
+	"k8s/db"
 	. "k8s/templates"
+	"log"
+	"os"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
 
 var namespace = "alerts-workloads-manager-system"
 
@@ -87,11 +97,41 @@ func testingSpinningUpMiniInfra() {
 	ApplyTemplateToProject("ooo", []TemplateContainer{tc1, tc2})
 
 }
+
+func getEnvWithDefault(key, defaultValue string) string {
+    if value := os.Getenv(key); value != "" {
+        return value
+    }
+    return defaultValue
+}
+
+func createIndexes(ctx context.Context, db *mongo.Database) {
+    // Create unique index on username
+    _, err := db.Collection("users").Indexes().CreateOne(ctx, mongo.IndexModel{
+        Keys: bson.D{{Key: "username", Value: 1}},
+        Options: options.Index().SetUnique(true),
+    })
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    // Create index on session token and expiry
+    _, err = db.Collection("sessions").Indexes().CreateOne(ctx, mongo.IndexModel{
+        Keys: bson.D{
+            {Key: "token", Value: 1},
+            {Key: "expires_at", Value: 1},
+        },
+    })
+    if err != nil {
+        log.Fatal(err)
+    }
+}
+
 func main() {
 
 	// namespace := "testing-rbac-custom-roles"
 
-	fmt.Print(GetServicesFromOutsideTheCluster(namespace))
+	// fmt.Print(GetServicesFromOutsideTheCluster(namespace))
 
 	// testApplyingTemplateContainerWithNormalValues()
 
@@ -145,10 +185,12 @@ func main() {
 
 	// just_for_testing_workload_operator()
 
-	fmt.Print("")
+// 	fmt.Print("")
 
-	GetServicesFromOutsideTheCluster("ooo")
-testApplyingTemplateContainerWithNormalValues()
+// 	GetServicesFromOutsideTheCluster("ooo")
+// testApplyingTemplateContainerWithNormalValues()
 	// testingSpinningUpMiniInfra()
 
+
+SetupServer(db.Repo)
 }

@@ -2,7 +2,7 @@ package templates
 
 import (
 	"errors"
-	. "k8s/primitives"
+	. "k8s/utils"
 	helper "k8s/project_highlevel_interface"
 )
 
@@ -29,14 +29,6 @@ func exportCurrentProjectAsTemplate() ([]TemplateContainer, error) {
 	return templates, nil
 }
 
-// api endpoints
-func createTemplate(Template []TemplateContainer) {
-
-}
-
-func deleteTemplate(templateName string) {
-
-}
 
 func GetAllContainersFromProject() ([]TemplateContainer, error) { // TODO: think of how to retrieve the containers, will you carry the k8s ckuster directly and try building it up the prject data or will you save the projects data somewhere and retrieve it
 	return []TemplateContainer{}, nil
