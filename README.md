@@ -308,6 +308,9 @@ Also for your ease of use the is a publically exposed api so that the community 
 
 - each group is an eks behind the scenes and each project is a k8s namespace
 
+# Other services
+## github on push rebuild server
+## wasm lambdas
 
 
 # Dump, dont read this
