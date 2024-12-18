@@ -1,4 +1,9 @@
 f# Overview of the project
+
+build an aws amplify on top of this and make a fully lambda next js deployment Template, add sst like code as infra tool
+
+
+
 - platform where you can easily deploy all kinds of `application`s which work on the base of docker container  
 - to deploy an `application` you create a `project` 
 - in a `project` you can create `application` and choose from a variety of `application` `options`
