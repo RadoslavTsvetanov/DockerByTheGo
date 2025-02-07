@@ -116,7 +116,7 @@ app.get("/permissions/:permissionId", async (req, res) => {
   const result = await dbRepo.permissions.getById({
     id: Number(req.params.permissionId),
   });
-    return helpers.Requests.succesfulReq(res, result ? result : {});
+  return helpers.Requests.succesfulReq(res, result ? result : {});
 });
 
 app.post("/permissions", async (req, res) => {
@@ -150,7 +150,7 @@ app.get("/roles", async (req, res) => {
 
 app.get("/roles/:roleId", async (req, res) => {
   const result = await dbRepo.role.getById({ id: Number(req.params.roleId) });
-    return helpers.Requests.succesfulReq(res, result ? result : {});
+  return helpers.Requests.succesfulReq(res, result ? result : {});
 });
 
 app.post("/roles", async (req, res) => {
@@ -174,5 +174,5 @@ app.delete("/roles/:roleId", async (req, res) => {
 
 // Start the server
 app.listen(4000, () => {
-  console.log("Server is running on port 4000");
+  ("Server is running on port 4000");
 });

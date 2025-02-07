@@ -17,7 +17,7 @@ const client = new Client({
 // Connect to PostgreSQL database
 client
   .connect()
-  .then(() => console.log("Connected to PostgreSQL"))
+  .then(() => "Connected to PostgreSQL")
   .catch((err) => console.error("Connection error", err.stack));
 
 // Endpoint to check connection
@@ -35,5 +35,5 @@ app.get("/check-connection", async (req, res) => {
 
 // Start the server
 app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+  `Server running at http://localhost:${port}`;
 });

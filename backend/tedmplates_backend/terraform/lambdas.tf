@@ -23,9 +23,20 @@ resource "aws_iam_role_policy_attachment" "lambda_vpc_execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
 }
 
+resource "aws_lambda_function" "function_to_get_envs_and_creds" {
+  function_name = "EnvLambda"
+  handler          = "index.handler"
+  filename = "../lambda/secrets_lambda/secrets_lambda.zip"
+  role = aws_iam_role.lambda_exec_role.arn
+  memory_size = var.lambda_memory_size
+  timeout          = var.lambda_timeout
+  layers          = [aws_lambda_layer_version.my_lambda_layer.arn]
+  runtime = "nodejs18.x" 
+}
+
 # GET Lambda function
 resource "aws_lambda_function" "get_lambda" {
-  filename         = "../lambda/functions/funcctions.zip"
+  filename         = "../lambda/functions/functions.zip"
   function_name    = "GetLambda"
   role             = aws_iam_role.lambda_exec_role.arn
   handler          = "index.get_handler"
@@ -34,7 +45,7 @@ resource "aws_lambda_function" "get_lambda" {
   timeout          = var.lambda_timeout
   layers          = [aws_lambda_layer_version.my_lambda_layer.arn]
   
-  environment {
+  environment { # replace and instead use thee func which gives you the envs 
     variables = {
       DB_HOST     = aws_db_instance.db_instance.address
       DB_USER     = var.db_username
@@ -51,7 +62,7 @@ resource "aws_lambda_function" "get_lambda" {
 
 # POST Lambda function
 resource "aws_lambda_function" "post_lambda" {
-  filename         = "../lambda/functions/funcctions.zip"
+  filename         = "../lambda/functions/functions.zip"
   function_name    = "PostLambda"
   role             = aws_iam_role.lambda_exec_role.arn
   handler          = "index.post_handler"

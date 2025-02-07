@@ -10,7 +10,7 @@ const messageHandler = async (
     await consumer.connect();
     await consumer.subscribe({ topic, fromBeginning: true });
 
-    console.log(`Subscribed to topic ${topic}`);
+    `Subscribed to topic ${topic}`;
 
     await consumer.run({
       eachMessage: handleMessage,
@@ -20,26 +20,19 @@ const messageHandler = async (
   }
 };
 
-
-
-
 export function setUpKafkaConsumer(
   consumer: Consumer,
   topic: string,
   handleMessage: (payload: EachMessagePayload) => Promise<void>
 ) {
-    
+  const shutdown = async () => {
+    ("Shutting down consumer...");
+    await consumer.disconnect();
+    process.exit(0);
+  };
 
-const shutdown = async () => {
-  console.log('Shutting down consumer...');
-  await consumer.disconnect();
-  process.exit(0);
-};
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
 
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
-
-messageHandler(consumer, handleMessage, topic).catch(console.error);
-
-
+  messageHandler(consumer, handleMessage, topic).catch(console.error);
 }

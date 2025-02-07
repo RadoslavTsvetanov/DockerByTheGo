@@ -62,9 +62,23 @@ this.id,
   }
 }
 
+
+type Offset = {
+  centerOffsetX: number ,
+  centerOffsetY: number 
+}
+
 export class TextObject extends Rectangle {
   private text: string;
-
+  private textPosition: Offset = {
+    centerOffsetX: (this.geometricProperties.width / 2),
+    centerOffsetY: (this.geometricProperties.height / 2)
+  }
+  
+  public changeTextPosition(offset: Offset): void {
+    this.textPosition.centerOffsetX = offset.centerOffsetX;
+    this.textPosition.centerOffsetY = offset.centerOffsetY;
+  }
   constructor(
     x: number,
     y: number,
@@ -89,8 +103,8 @@ export class TextObject extends Rectangle {
     ctx.font = "16px Arial";
     ctx.fillText(
       this.text,
-      this.geometricProperties.x + this.geometricProperties.width / 2,
-      this.geometricProperties.y + this.geometricProperties.height / 2
+      this.geometricProperties.x + this.textPosition.centerOffsetX,
+      this.geometricProperties.y + this.textPosition.centerOffsetY 
     );
   }
 

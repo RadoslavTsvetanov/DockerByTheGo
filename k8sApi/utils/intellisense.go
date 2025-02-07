@@ -1,7 +1,7 @@
 // this file will provide autoceomplete and intellisense for selecting resources
 // This file provides auto-complete and intellisense for selecting resources.
 // it will be mostly get functions
-package primitives
+package utils
 
 import (
 	"context"

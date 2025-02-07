@@ -38,15 +38,15 @@ function setUpEventListeners(canvasManager: CanvasSingleton) {
 export function setUpCanvas(
   canvas: HTMLCanvasElement,
   canvasManager: MutableRefObject<CanvasSingleton | null>,
-) {
+) : CanvasSingleton | null{
   if (!canvas) {
     // since most things will require a cnavsas ref i wouldnt want to check it each time so we just return early
-    return;
+    return null;
   }
 
   canvasManager.current = CanvasSingleton.getInstance(canvas);
   if (!canvasManager) {
-    return;
+    return null;
   }
   setUpEventListeners(canvasManager.current);
   const gameFrameHandler = () => {
@@ -58,4 +58,6 @@ export function setUpCanvas(
   };
 
   gameFrameHandler();
+
+  return canvasManager.current
 }

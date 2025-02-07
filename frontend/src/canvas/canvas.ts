@@ -15,6 +15,10 @@ import { CanvasObject } from "./compoents/baseCompoents";
 import { serializer } from './serializer';
 import { ExecuteFrameMessage, gameLoop, triggerFrameExecution } from './entities/gameLoo';
 
+
+
+
+
 const selectedObjectsManager = new SelectedElementsManager();
 const objectsManager = new CanvasElementsManager();
 export const undoRedoStack = new UndoRedo(
@@ -37,6 +41,14 @@ export class CanvasSingleton {
   private cursor = Cursor.getInstance();
   private isDrawing = false;
   private selectObj = new Select(0,0,1,1)
+
+  public addObject(obj: CanvasObject){
+      this.objectManager.addObject(obj);
+  }
+
+  public getObject(id: number) {
+    return this.objectManager.getObject(id);
+  }
 
   private constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
